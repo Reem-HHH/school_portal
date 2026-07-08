@@ -5,12 +5,11 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
-require('./db/init');
-
 const authRoutes = require('./routes/auth');
 const uploadsRoutes = require('./routes/uploads');
 const auditRoutes = require('./routes/audit');
 const { attachUser } = require('./middleware/auth');
+const { initDb } = require('./db/index');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -54,7 +53,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/audit', auditRoutes);
 
-app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 app.use(express.static(DOCS));
 
 app.get('/admin', (_req, res) => {
@@ -67,6 +65,12 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(DOCS, 'portal.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`School portal running on port ${PORT}`);
+initDb().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`School portal running on port ${PORT}`);
+    console.log(`Database: ${process.env.DATABASE_URL ? 'PostgreSQL (Neon)' : 'SQLite (local)'}`);
+  });
+}).catch((err) => {
+  console.error('Failed to start:', err);
+  process.exit(1);
 });

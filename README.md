@@ -2,77 +2,76 @@
 
 Minimal school portal with admin uploads, user auth, and activity logging.
 
-## Important: GitHub Pages vs live app
-
-**GitHub Pages can only show the frontend** (HTML/CSS). It cannot run the Node.js server, database, login, or file uploads.
-
-| Host | What works |
-|------|------------|
-| **Render** (recommended) | Everything — login, uploads, admin, database |
-| **GitHub Pages** | Frontend only — login needs a Render backend connected |
-
-## Run locally (full app)
+## Run locally
 
 ```bash
 npm install
 npm start
 ```
 
-Open http://localhost:3000 — sign in with `admin@school.com` / `admin123`
+Open http://localhost:3000 — uses local SQLite automatically (no setup needed).
 
-## Deploy online (recommended — full app)
+**Admin login:** `admin@school.com` / `admin123`
 
-1. Go to [render.com](https://render.com) and sign up
-2. **New → Blueprint** → connect this GitHub repo
-3. Render reads `render.yaml` and deploys automatically
-4. Use your Render URL (e.g. `https://school-portal-xxxx.onrender.com`) — **this is your live website**
+---
 
-## GitHub Pages setup (frontend only)
+## Deploy on Render (free tier — no disk needed)
 
-If you want your GitHub Pages link to show the login page instead of the README:
+Render's free tier has no persistent disk, so the app uses a **free Neon PostgreSQL database** and stores uploaded files **inside the database**. Data persists across restarts.
 
-1. Go to your repo on GitHub → **Settings → Pages**
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**
-3. Push to `main` — the workflow deploys the `docs/` folder automatically
-4. Your site will be at `https://YOUR-USERNAME.github.io/school_portal/`
+### Step 1 — Create a free database (Neon)
 
-### Connect GitHub Pages to Render backend
+1. Go to [neon.tech](https://neon.tech) and sign up (free)
+2. Create a new project
+3. Copy the **connection string** (starts with `postgresql://...`)
 
-After deploying to Render, edit `docs/index.html` and set your Render URL:
+### Step 2 — Deploy on Render
 
-```html
-<meta name="api-base" content="https://YOUR-APP.onrender.com">
-```
+1. Go to [render.com](https://render.com) → **New → Blueprint**
+2. Connect your GitHub repo: `Reem-HHH/school_portal`
+3. When prompted, set **`DATABASE_URL`** to your Neon connection string
+4. Deploy — your site will be at `https://school-portal-xxxx.onrender.com`
 
-Also set the same meta tag in `portal.html`, `register.html`, and `admin.html`.
+That's your live website. Login, uploads, admin, and activity log all work — no disk required.
 
-On Render, add environment variable:
+### Step 3 — Save your admin password
 
-```
-CORS_ORIGIN=https://YOUR-USERNAME.github.io
-```
+Render generates a random `ADMIN_PASSWORD`. Find it in Render → your service → **Environment** tab, or set your own value there.
 
-Then login from GitHub Pages will talk to your Render server.
+---
 
-**Easier option:** skip GitHub Pages and just share your Render URL — everything works on one link.
+## GitHub Pages (optional — frontend only)
+
+GitHub Pages can show the login page UI but **cannot run the server**. For a working site, use your **Render URL**.
+
+To fix GitHub Pages showing the README instead of the login page:
+
+1. Repo → **Settings → Pages → Source → GitHub Actions**
+2. Push to `main` — the workflow deploys the `docs/` folder
+
+---
 
 ## Admin features
 
 - Upload schedules and grades as **images** or **Excel/CSV**
 - Manage users and roles
-- View activity log of all changes
+- View activity log of all user changes
 
-## Demo login
+## Environment variables
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@school.com | admin123 |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | On Render | Neon PostgreSQL connection string |
+| `SESSION_SECRET` | On Render | Random secret for sessions |
+| `ADMIN_EMAIL` | Optional | Default admin email |
+| `ADMIN_PASSWORD` | Optional | Default admin password |
+| `CORS_ORIGIN` | Optional | Only if using GitHub Pages frontend |
 
 ## Project structure
 
 ```
-docs/           Website files (GitHub Pages + Express)
+docs/           Website files
 server.js       Node.js server
-db/             SQLite database
+db/             Database layer (SQLite local / PostgreSQL on Render)
 render.yaml     Render deployment config
 ```

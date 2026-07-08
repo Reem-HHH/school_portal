@@ -5,7 +5,7 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /login.html
+    healthCheckPath: /index.html
     envVars:
       - key: NODE_ENV
         value: production
@@ -15,7 +15,5 @@ services:
         value: admin@school.com
       - key: ADMIN_PASSWORD
         generateValue: true
-    disk:
-      name: school-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false
