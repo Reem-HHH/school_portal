@@ -19,7 +19,9 @@ async function loadAssignments() {
   sel.innerHTML = list.map(a =>
     `<option value="${a.subject}|${a.grade}|${a.section}">${a.subject} — ${a.grade} ${a.section}</option>`
   ).join('') || `<option value="">${t('noClasses')}</option>`;
-  if (list.length) loadGradebook();
+  if (list.length && !document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
+    loadGradebook();
+  }
 }
 
 async function loadGradebook() {
@@ -87,7 +89,7 @@ async function init() {
   document.getElementById('user-label').textContent = currentUser.full_name;
 
   onLanguageChange(() => {
-    loadAssignments();
+    if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) loadAssignments();
     if (!document.getElementById('panel-schedule').classList.contains('section-hidden')) loadSchedule();
   });
 
@@ -95,6 +97,7 @@ async function init() {
     tab.addEventListener('click', () => {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === 'schedule') loadSchedule();
+      if (tab.dataset.tab === 'gradebook') loadGradebook();
     });
   });
 
@@ -127,7 +130,7 @@ async function init() {
   });
 
   wireDownloads();
-  await loadAssignments();
+  await Promise.all([loadSchedule(), loadAssignments()]);
 }
 
 init();
