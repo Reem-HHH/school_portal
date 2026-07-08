@@ -526,6 +526,39 @@ td.empty-prompt {
   margin: 0.35rem 0;
 }
 
+.teacher-roster-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--moe-gold-dark);
+}
+
+.teacher-roster-row {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.teacher-roster-row:last-child {
+  border-bottom: none;
+}
+
+.teacher-roster-row .assignment-count {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--moe-gold-dark);
+  font-weight: 600;
+}
+
+.teacher-roster-row .roster-preview {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+}
+
+html[dir="rtl"] .teacher-roster-row .assignment-count {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
 .btn-inline {
   margin-left: 0.5rem;
   padding: 0.2rem 0.5rem;
