@@ -1,0 +1,94 @@
+:root {
+  --primary: #4f46e5;
+  --primary-light: #06b6d4;
+  --surface: #f8fafc;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: linear-gradient(180deg, #f0f9ff 0%, #faf5ff 50%, #fff7ed 100%);
+  min-height: 100vh;
+}
+
+body.arabic { direction: rtl; }
+
+.glass-header {
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  border-radius: 0 0 24px 24px;
+}
+
+.stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+}
+
+.auth-card {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.section-hidden { display: none !important; }
+
+.nav-active {
+  background: rgba(255, 255, 255, 0.25) !important;
+  font-weight: 600;
+}
+
+.toast {
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+.input-field {
+  border: 2px solid #e2e8f0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus {
+  outline: none;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+}
+
+.role-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.role-admin { background: #fef3c7; color: #b45309; }
+.role-teacher { background: #dbeafe; color: #1d4ed8; }
+.role-parent { background: #dcfce7; color: #15803d; }
+.role-student { background: #f3e8ff; color: #7e22ce; }
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav { display: flex; }
+  .desktop-nav { display: none !important; }
+}

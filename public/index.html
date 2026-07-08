@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital School Management Portal</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="min-h-screen">
+  <div id="toast-container"></div>
+
+  <!-- Header -->
+  <header class="glass-header w-full shadow-lg sticky top-0 z-50">
+    <div class="flex items-center justify-between px-4 md:px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-white/30 flex items-center justify-center shadow-md">
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+        </div>
+        <h1 class="text-white font-bold text-lg" data-i18n="logo-text">Digital School</h1>
+      </div>
+      <nav class="desktop-nav hidden md:flex items-center gap-1">
+        <button data-section="dashboard" class="nav-btn px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium nav-active" data-i18n="nav-dashboard">Dashboard</button>
+        <button data-section="schedules" class="nav-btn px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-schedules">Schedules</button>
+        <button data-section="grades" class="nav-btn px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-grades">Grades</button>
+        <button data-section="students" class="nav-btn px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-students">Students</button>
+        <a id="admin-link" href="/admin.html" class="hidden px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-admin">Admin</a>
+        <button id="logout-btn" class="px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-logout">Logout</button>
+        <button id="lang-toggle" class="px-4 py-2 rounded-lg bg-white/20 text-white hover:bg-white/30 text-sm font-medium">العربية</button>
+      </nav>
+      <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-white/20 text-white">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <!-- Mobile nav -->
+    <div id="mobile-nav" class="mobile-nav flex-col gap-1 px-4 pb-4 hidden">
+      <button data-section="dashboard" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium nav-active" data-i18n="nav-dashboard">Dashboard</button>
+      <button data-section="schedules" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-schedules">Schedules</button>
+      <button data-section="grades" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-grades">Grades</button>
+      <button data-section="students" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-students">Students</button>
+      <a id="admin-link-mobile" href="/admin.html" class="hidden px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-admin">Admin</a>
+      <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="flex w-full">
+    <!-- Sidebar -->
+    <aside class="hidden md:block w-60 min-h-[calc(100vh-72px)] border-r border-indigo-100 bg-white/50 p-6 space-y-6">
+      <div class="bg-gradient-to-br from-blue-100 to-cyan-100 p-4 rounded-2xl shadow-md">
+        <p class="text-xs uppercase tracking-wider mb-3 font-bold text-blue-800" data-i18n="sidebar-role-label">Your Role</p>
+        <div id="role-display" class="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold text-sm shadow-md"></div>
+      </div>
+      <div class="bg-gradient-to-br from-yellow-100 to-orange-100 p-4 rounded-2xl shadow-md">
+        <p class="text-xs uppercase tracking-wider mb-3 font-bold text-orange-800" data-i18n="sidebar-links-label">Quick Links</p>
+        <div class="flex flex-col gap-1">
+          <button data-section="dashboard" class="sidebar-link flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-yellow-200 text-blue-700 text-sm font-medium transition">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span data-i18n="link-overview">Overview</span>
+          </button>
+          <button data-section="schedules" class="sidebar-link flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-yellow-200 text-blue-700 text-sm font-medium transition">
+            <i data-lucide="calendar" class="w-4 h-4"></i><span data-i18n="link-calendar">Calendar</span>
+          </button>
+          <button data-section="grades" class="sidebar-link flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-yellow-200 text-blue-700 text-sm font-medium transition">
+            <i data-lucide="clipboard-list" class="w-4 h-4"></i><span data-i18n="nav-grades">Grades</span>
+          </button>
+          <button data-section="students" class="sidebar-link flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-yellow-200 text-blue-700 text-sm font-medium transition">
+            <i data-lucide="users" class="w-4 h-4"></i><span data-i18n="nav-students">Students</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 space-y-8 max-w-5xl">
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="app-section space-y-6">
+        <div>
+          <h2 id="welcome-heading" class="font-bold text-2xl text-gray-800 mb-1">Welcome back 👋</h2>
+          <p class="text-gray-500" data-i18n="welcome-sub">Here's what's happening at your school today.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="stat-card rounded-2xl p-6 border-2 border-blue-200 bg-white shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-200 to-cyan-200 flex items-center justify-center">
+                <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+              </div>
+              <div>
+                <p id="stat-students-value" class="text-3xl font-bold text-gray-800">—</p>
+                <p class="text-sm text-gray-500" data-i18n="stat-students-label">Total Students</p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card rounded-2xl p-6 border-2 border-yellow-200 bg-white shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-200 to-orange-200 flex items-center justify-center">
+                <i data-lucide="book-open" class="w-6 h-6 text-yellow-600"></i>
+              </div>
+              <div>
+                <p id="stat-classes-value" class="text-3xl font-bold text-gray-800">—</p>
+                <p class="text-sm text-gray-500" data-i18n="stat-classes-label">Active Classes</p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card rounded-2xl p-6 border-2 border-green-200 bg-white shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-200 to-emerald-200 flex items-center justify-center">
+                <i data-lucide="clipboard-list" class="w-6 h-6 text-green-600"></i>
+              </div>
+              <div>
+                <p id="stat-grades-value" class="text-3xl font-bold text-gray-800">—</p>
+                <p class="text-sm text-gray-500" data-i18n="stat-grades-label">Pending Grades</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="announcement-box" class="rounded-2xl p-6 border-2 border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50 shadow-md">
+          <div class="flex items-start gap-3">
+            <i data-lucide="star" class="w-6 h-6 text-blue-500 mt-0.5"></i>
+            <div>
+              <p class="font-bold text-blue-700 mb-1" data-i18n="announcement-title">📢 School Announcement</p>
+              <p id="announcement-text" class="text-sm text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schedules Section -->
+      <section id="section-schedules" class="app-section section-hidden space-y-4">
+        <h2 class="font-bold text-xl text-gray-800" data-i18n="timetable-heading">📅 Weekly Timetable</h2>
+        <div class="flex flex-wrap gap-3">
+          <select id="schedule-grade" class="input-field rounded-lg px-3 py-2 text-sm"></select>
+          <select id="schedule-section" class="input-field rounded-lg px-3 py-2 text-sm"></select>
+        </div>
+        <div class="overflow-x-auto rounded-2xl border-2 border-blue-200 shadow-md bg-white">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gradient-to-r from-blue-100 to-cyan-100" id="schedule-head"></tr>
+            </thead>
+            <tbody id="schedule-body" class="divide-y divide-blue-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Grades Section -->
+      <section id="section-grades" class="app-section section-hidden space-y-4">
+        <h2 class="font-bold text-xl text-gray-800" data-i18n="grading-heading">📝 Teacher Grading Portal</h2>
+        <div class="flex flex-wrap gap-3">
+          <select id="grade-class" class="input-field rounded-lg px-3 py-2 text-sm"></select>
+          <select id="grade-exam" class="input-field rounded-lg px-3 py-2 text-sm">
+            <option>Midterm Exam</option>
+            <option>Final Exam</option>
+            <option>Quiz 1</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto rounded-2xl border-2 border-green-200 shadow-md bg-white">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gradient-to-r from-green-100 to-emerald-100">
+                <th class="px-4 py-3 text-left font-bold text-green-700">#</th>
+                <th class="px-4 py-3 text-left font-bold text-green-700">Student Name</th>
+                <th class="px-4 py-3 text-center font-bold text-green-700">Grade (100)</th>
+              </tr>
+            </thead>
+            <tbody id="grades-body" class="divide-y divide-green-100"></tbody>
+          </table>
+        </div>
+        <div id="grades-actions" class="flex items-center gap-3">
+          <button id="save-grades-btn" class="btn-primary px-6 py-3 rounded-lg font-bold text-white shadow-lg text-sm" data-i18n="save-grades-btn">Save Grades</button>
+        </div>
+      </section>
+
+      <!-- Students Section -->
+      <section id="section-students" class="app-section section-hidden space-y-6">
+        <h2 class="font-bold text-xl text-gray-800" data-i18n="form-heading">➕ Add New Student</h2>
+
+        <form id="student-form" class="max-w-lg space-y-4 bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border-2 border-yellow-200 shadow-md">
+          <div>
+            <label for="student-name" class="block text-sm font-bold text-blue-700 mb-2" data-i18n="form-name-label">Student Full Name</label>
+            <input id="student-name" type="text" required class="input-field w-full rounded-lg px-4 py-3 text-sm" placeholder="Enter full name">
+          </div>
+          <div>
+            <label for="student-grade" class="block text-sm font-bold text-blue-700 mb-2" data-i18n="form-grade-label">Grade Level</label>
+            <select id="student-grade" class="input-field w-full rounded-lg px-4 py-3 text-sm">
+              <option>Grade 5</option><option>Grade 6</option><option>Grade 7</option>
+            </select>
+          </div>
+          <div>
+            <label for="student-section" class="block text-sm font-bold text-blue-700 mb-2" data-i18n="form-section-label">Section</label>
+            <select id="student-section" class="input-field w-full rounded-lg px-4 py-3 text-sm">
+              <option>Section A</option><option>Section B</option><option>Section C</option>
+            </select>
+          </div>
+          <div>
+            <label for="parent-phone" class="block text-sm font-bold text-blue-700 mb-2" data-i18n="form-phone-label">Parent Phone Number</label>
+            <input id="parent-phone" type="tel" class="input-field w-full rounded-lg px-4 py-3 text-sm" placeholder="+971 XX XXX XXXX">
+          </div>
+          <button type="submit" id="student-form-btn" class="btn-primary w-full py-3 rounded-lg font-bold text-white shadow-lg text-sm" data-i18n="form-submit-btn">Save Student Record</button>
+        </form>
+
+        <div class="rounded-2xl border-2 border-blue-200 shadow-md bg-white overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
+            <h3 class="font-bold text-blue-800">All Students</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="px-4 py-3 text-left font-bold text-gray-600">Name</th>
+                  <th class="px-4 py-3 text-left font-bold text-gray-600">Grade</th>
+                  <th class="px-4 py-3 text-left font-bold text-gray-600">Section</th>
+                  <th class="px-4 py-3 text-left font-bold text-gray-600">Phone</th>
+                </tr>
+              </thead>
+              <tbody id="students-list" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

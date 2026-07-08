@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — Digital School</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="min-h-screen">
+  <div id="toast-container"></div>
+
+  <header class="glass-header w-full shadow-lg sticky top-0 z-50">
+    <div class="flex items-center justify-between px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-white/30 flex items-center justify-center shadow-md">
+          <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-white font-bold text-lg" data-i18n="admin-title">Admin Panel</h1>
+          <p class="text-white/70 text-xs" data-i18n="admin-sub">Manage users and system access</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="/index.html" class="px-4 py-2 rounded-lg bg-white/20 text-white hover:bg-white/30 text-sm font-medium" data-i18n="back-dashboard">Back to Dashboard</a>
+        <button id="lang-toggle" class="px-4 py-2 rounded-lg bg-white/20 text-white hover:bg-white/30 text-sm font-medium">العربية</button>
+        <button id="logout-btn" class="px-4 py-2 rounded-lg text-white/90 hover:bg-white/10 text-sm font-medium" data-i18n="nav-logout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6 md:p-8 space-y-8">
+    <!-- Create User Form -->
+    <section class="bg-white rounded-2xl shadow-lg border border-indigo-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i data-lucide="user-plus" class="w-5 h-5 text-indigo-500"></i>
+        <span data-i18n="create-user-btn">Create User</span>
+      </h2>
+      <form id="create-user-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="name-label">Full Name</label>
+          <input id="new-name" type="text" required class="input-field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="email-label">Email</label>
+          <input id="new-email" type="email" required class="input-field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="password-label">Password</label>
+          <input id="new-password" type="password" required minlength="6" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="role-label">Role</label>
+          <select id="new-role" required class="input-field w-full rounded-lg px-3 py-2 text-sm">
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+            <option value="student">Student</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-bold text-sm" data-i18n="create-user-btn">Create User</button>
+      </form>
+    </section>
+
+    <!-- Users Table -->
+    <section class="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i>
+          All Users
+        </h2>
+        <span id="user-count" class="text-sm text-gray-500"></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gradient-to-r from-indigo-50 to-cyan-50">
+              <th class="px-4 py-3 text-left font-bold text-indigo-700">Name</th>
+              <th class="px-4 py-3 text-left font-bold text-indigo-700">Email</th>
+              <th class="px-4 py-3 text-left font-bold text-indigo-700">Role</th>
+              <th class="px-4 py-3 text-left font-bold text-indigo-700">Status</th>
+              <th class="px-4 py-3 text-left font-bold text-indigo-700">Joined</th>
+              <th class="px-4 py-3 text-right font-bold text-indigo-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script>
+    lucide.createIcons();
+    initLanguageToggle();
+
+    let currentUser = null;
+
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser || currentUser.role !== 'admin') {
+        showToast('Admin access required', 'error');
+        setTimeout(() => { window.location.href = '/index.html'; }, 800);
+        return;
+      }
+      await loadUsers();
+    }
+
+    async function loadUsers() {
+      const { users } = await API.get('/api/auth/users');
+      document.getElementById('user-count').textContent = `${users.length} users`;
+      const tbody = document.getElementById('users-table');
+      tbody.innerHTML = users.map(u => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium text-gray-800">${u.full_name}</td>
+          <td class="px-4 py-3 text-gray-600">${u.email}</td>
+          <td class="px-4 py-3">
+            <select data-user-id="${u.id}" class="role-select input-field rounded-lg px-2 py-1 text-xs" ${u.id === currentUser.id ? 'disabled' : ''}>
+              ${['admin','teacher','parent','student'].map(r =>
+                `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`
+              ).join('')}
+            </select>
+          </td>
+          <td class="px-4 py-3">
+            <button data-toggle-id="${u.id}" data-active="${u.is_active}"
+              class="status-btn px-3 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}"
+              ${u.id === currentUser.id ? 'disabled' : ''}>
+              ${u.is_active ? 'Active' : 'Inactive'}
+            </button>
+          </td>
+          <td class="px-4 py-3 text-gray-500">${formatDate(u.created_at)}</td>
+          <td class="px-4 py-3 text-right">
+            ${u.id !== currentUser.id ? `<button data-delete-id="${u.id}" class="text-red-500 hover:text-red-700 text-xs font-bold">Delete</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.role-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          try {
+            await API.patch(`/api/auth/users/${sel.dataset.userId}`, { role: sel.value });
+            showToast('Role updated');
+          } catch (err) {
+            showToast(err.message, 'error');
+            loadUsers();
+          }
+        });
+      });
+
+      tbody.querySelectorAll('.status-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.toggleId;
+          const isActive = btn.dataset.active === '1';
+          try {
+            await API.patch(`/api/auth/users/${id}`, { isActive: !isActive });
+            showToast('Status updated');
+            loadUsers();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+      });
+
+      tbody.querySelectorAll('[data-delete-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this user permanently?')) return;
+          try {
+            await API.delete(`/api/auth/users/${btn.dataset.deleteId}`);
+            showToast('User deleted');
+            loadUsers();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+      });
+    }
+
+    document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await API.post('/api/auth/users', {
+          fullName: document.getElementById('new-name').value,
+          email: document.getElementById('new-email').value,
+          password: document.getElementById('new-password').value,
+          role: document.getElementById('new-role').value
+        });
+        showToast('User created successfully');
+        e.target.reset();
+        loadUsers();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await API.post('/api/auth/logout');
+      window.location.href = '/login.html';
+    });
+
+    init();
+  </script>
+</body>
+</html>
