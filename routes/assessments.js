@@ -11,14 +11,25 @@ async function loadAssessment(id) {
   return db.get('SELECT * FROM assessments WHERE id = ?', [id]);
 }
 
-router.get('/subjects', requireAuth, requireRole('teacher'), async (req, res) => {
+router.get('/subjects', requireAuth, requireRole('admin', 'teacher'), async (req, res) => {
   try {
     const { grade, section } = req.query;
     if (!grade || !section) {
       return res.status(400).json({ error: 'grade and section are required' });
     }
-    const subjects = await getTeacherSubjects(req.session.user.id, grade, section);
-    res.json({ subjects });
+    const user = req.session.user;
+    if (user.role === 'teacher') {
+      const subjects = await getTeacherSubjects(user.id, grade, section);
+      return res.json({ subjects });
+    }
+    const rows = await db.all(`
+      SELECT DISTINCT subject FROM (
+        SELECT subject FROM teacher_assignments WHERE grade = ? AND section = ?
+        UNION
+        SELECT subject FROM assessments WHERE grade_level = ? AND section = ?
+      ) AS combined ORDER BY subject
+    `, [grade, section, grade, section]);
+    res.json({ subjects: rows.map(r => r.subject) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -208,7 +219,7 @@ router.post('/:id/marks', requireAuth, requireRole('admin', 'teacher'), async (r
 router.patch('/:id', requireAuth, requireRole('admin', 'teacher'), async (req, res) => {
   try {
     const user = req.session.user;
-    const { status } = req.body;
+    const { status, name, maxScore } = req.body;
     const assessment = await loadAssessment(req.params.id);
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
 
@@ -223,6 +234,43 @@ router.patch('/:id', requireAuth, requireRole('admin', 'teacher'), async (req, r
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const markCount = await db.get(
+      'SELECT COUNT(*) as count FROM formative_grades WHERE assessment_id = ?',
+      [assessment.id]
+    );
+    const hasMarks = Number(markCount?.count || 0) > 0;
+
+    if (name && name.trim() !== assessment.name) {
+      if (user.role === 'teacher' && assessment.status !== 'open') {
+        return res.status(400).json({ error: 'Cannot rename a closed assessment' });
+      }
+      await db.run(`
+        UPDATE assessments SET name = ?,
+          updated_at = ${db.usePg ? 'NOW()' : "datetime('now')"}
+        WHERE id = ?
+      `, [name.trim(), assessment.id]);
+      await db.run(
+        'UPDATE formative_grades SET assessment_name = ? WHERE assessment_id = ?',
+        [name.trim(), assessment.id]
+      );
+    }
+
+    if (maxScore !== undefined) {
+      const max = parseFloat(maxScore);
+      if (Number.isNaN(max) || max <= 0) {
+        return res.status(400).json({ error: 'maxScore must be greater than 0' });
+      }
+      if (user.role === 'teacher' && (assessment.status !== 'open' || hasMarks)) {
+        return res.status(400).json({ error: 'Cannot change max score after marks are entered or assessment is closed' });
+      }
+      await db.run(`
+        UPDATE assessments SET max_score = ?,
+          updated_at = ${db.usePg ? 'NOW()' : "datetime('now')"}
+        WHERE id = ?
+      `, [max, assessment.id]);
+      await db.run('UPDATE formative_grades SET max_score = ? WHERE assessment_id = ?', [max, assessment.id]);
+    }
+
     if (status) {
       await db.run(`
         UPDATE assessments SET status = ?,
@@ -233,6 +281,37 @@ router.patch('/:id', requireAuth, requireRole('admin', 'teacher'), async (req, r
 
     const updated = await loadAssessment(assessment.id);
     res.json({ assessment: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:id', requireAuth, requireRole('admin', 'teacher'), async (req, res) => {
+  try {
+    const user = req.session.user;
+    const assessment = await loadAssessment(req.params.id);
+    if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
+
+    if (user.role === 'teacher') {
+      const allowed = await verifyTeacherClass(
+        user.id, assessment.grade_level, assessment.section, assessment.subject
+      );
+      if (!allowed) return res.status(403).json({ error: 'You are not assigned to this class' });
+      if (assessment.status !== 'open') {
+        return res.status(400).json({ error: 'Cannot delete a closed assessment' });
+      }
+    }
+
+    await db.run('DELETE FROM assessments WHERE id = ?', [assessment.id]);
+
+    await logAction(req, {
+      action: 'assessment.delete',
+      entityType: 'assessment',
+      entityId: parseInt(req.params.id, 10),
+      details: { name: assessment.name, subject: assessment.subject }
+    });
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

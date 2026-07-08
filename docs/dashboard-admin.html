@@ -32,7 +32,6 @@
       <button class="tab" data-tab="students" data-i18n="tabStudents">Students</button>
       <button class="tab" data-tab="gradebook" data-i18n="tabMasterGradebook">Master Gradebook</button>
       <button class="tab" data-tab="sample" data-i18n="tabSampleData">Sample Data</button>
-      <button class="tab" data-tab="uploads" data-i18n="tabUploads">Uploads</button>
       <button class="tab" data-tab="logs" data-i18n="tabLogs">Activity Log</button>
     </div>
 
@@ -80,7 +79,7 @@
 
     <div id="panel-teachers" class="tab-panel section-hidden">
       <h2 data-i18n="teacherDirectory">Teacher directory</h2>
-      <div id="teachers-list" class="card"></div>
+      <div id="teachers-list"></div>
     </div>
 
     <div id="panel-students" class="tab-panel section-hidden">
@@ -117,32 +116,40 @@
     </div>
 
     <div id="panel-gradebook" class="tab-panel section-hidden">
-      <h2 data-i18n="masterGradebook">Master gradebook</h2>
-      <div class="table-toolbar">
-        <select id="gb-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
-        <select id="gb-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
-        <input id="gb-subject" class="input-field toolbar-input" data-i18n-placeholder="subjectFilter" placeholder="Subject filter">
-        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
-        <select id="gradebook-sort" class="input-field toolbar-select">
-          <option value="student-asc" data-i18n="sortStudent">Student (A–Z)</option>
-          <option value="score-desc" data-i18n="sortScoreHigh">Score (high to low)</option>
-          <option value="score-asc" data-i18n="sortScoreLow">Score (low to high)</option>
-          <option value="subject-asc" data-i18n="sortSubject">Subject</option>
-          <option value="grade-asc" data-i18n="sortGrade">Grade</option>
-        </select>
+      <div id="admin-gradebook-overview">
+        <h2 data-i18n="masterGradebook">Master gradebook</h2>
+        <div class="card form-grid form-grid-3 mb-1">
+          <div class="form-row">
+            <label data-i18n="grade">Grade</label>
+            <select id="gb-grade"><option value="" data-i18n="selectGrade">Select grade</option></select>
+          </div>
+          <div class="form-row">
+            <label data-i18n="section">Section</label>
+            <select id="gb-section"><option value="" data-i18n="selectSection">Select section</option></select>
+          </div>
+          <div class="form-row">
+            <label data-i18n="subject">Subject</label>
+            <select id="gb-subject"><option value="" data-i18n="selectSubject">Select subject</option></select>
+          </div>
+        </div>
+        <div id="admin-gradebook-matrix" class="data-table-wrap"></div>
       </div>
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr>
-            <th data-i18n="student">Student</th>
-            <th data-i18n="class">Class</th>
-            <th data-i18n="subject">Subject</th>
-            <th data-i18n="type">Type</th>
-            <th data-i18n="assessment">Assessment</th>
-            <th data-i18n="score">Score</th>
-          </tr></thead>
-          <tbody id="gradebook-table"></tbody>
-        </table>
+      <div id="admin-gradebook-marking" class="section-hidden">
+        <div class="actions-row mb-1">
+          <button id="admin-back-gradebook" class="btn btn-outline" data-i18n="backToGradebook">Back to gradebook</button>
+        </div>
+        <h2 id="admin-marking-title" data-i18n="markStudents">Mark students</h2>
+        <p id="admin-marking-meta" class="muted mb-1"></p>
+        <div class="data-table-wrap">
+          <table>
+            <thead><tr>
+              <th data-i18n="student">Student</th>
+              <th data-i18n="score">Score</th>
+              <th data-i18n="outOf">Out of</th>
+            </tr></thead>
+            <tbody id="admin-marking-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -171,24 +178,6 @@
         <h3 data-sample-preview-title></h3>
         <div data-sample-preview class="data-table-wrap"></div>
       </div>
-    </div>
-
-    <div id="panel-uploads" class="tab-panel section-hidden">
-      <h2 data-i18n="uploadSchedule">Upload schedule</h2>
-      <form id="schedule-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
-        <div class="form-row"><label data-i18n="title">Title</label><input name="title" required></div>
-        <div class="form-row"><label data-i18n="label">Label</label><input name="label"></div>
-        <div class="form-row span-full"><label data-i18n="file">File</label><input name="file" type="file" required></div>
-        <div><button type="submit" class="btn" data-i18n="uploadScheduleBtn">Upload schedule</button></div>
-      </form>
-      <h2 data-i18n="uploadGradesFile">Upload grades file</h2>
-      <form id="grades-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
-        <div class="form-row"><label data-i18n="title">Title</label><input name="title" required></div>
-        <div class="form-row"><label data-i18n="label">Label</label><input name="label"></div>
-        <div class="form-row span-full"><label data-i18n="file">File</label><input name="file" type="file" required></div>
-        <div><button type="submit" class="btn" data-i18n="uploadGradesBtn">Upload grades</button></div>
-      </form>
-      <div id="uploads-list" class="card mt-1"></div>
     </div>
 
     <div id="panel-logs" class="tab-panel section-hidden">

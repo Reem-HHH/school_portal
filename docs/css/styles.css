@@ -498,6 +498,45 @@ td.empty-prompt {
   padding: 1.5rem 1rem;
 }
 
+.status-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-open {
+  background: rgba(0, 115, 47, 0.12);
+  color: var(--moe-green);
+}
+
+.status-closed {
+  background: var(--moe-silver-light);
+  color: var(--text-muted);
+}
+
+.teacher-card .assignment-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.teacher-card .assignment-list li {
+  margin: 0.35rem 0;
+}
+
+.btn-inline {
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+html[dir="rtl"] .btn-inline {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
 .toast {
   position: fixed;
   top: max(1rem, env(safe-area-inset-top));

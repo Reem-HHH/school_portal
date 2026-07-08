@@ -10,7 +10,8 @@ const activeClause = db.usePg ? 'is_active = true' : 'is_active = 1';
 router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { grade, section } = req.query;
-    let sql = `SELECT s.*, u.email as user_email, p.full_name as parent_name
+    let sql = `SELECT s.*, u.email as user_email, p.full_name as parent_name,
+                      s.parent_user_id, s.user_id
                FROM students s
                LEFT JOIN users u ON u.id = s.user_id
                LEFT JOIN users p ON p.id = s.parent_user_id

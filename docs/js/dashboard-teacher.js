@@ -1,6 +1,7 @@
 let currentUser = null;
 let assignments = [];
 let activeAssessmentId = null;
+let markingReadOnly = false;
 
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -52,6 +53,12 @@ async function populateSubjectSelect(selectId, grade, section, saved = '') {
   );
   el.innerHTML = `<option value="">${t('selectSubject')}</option>` +
     subjects.map(s => `<option value="${escapeHtml(s)}"${s === saved ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('');
+}
+
+function statusBadge(status) {
+  const cls = status === 'open' ? 'status-open' : 'status-closed';
+  const label = status === 'open' ? t('assessmentOpen') : t('assessmentClosed');
+  return `<span class="status-badge ${cls}">${label}</span>`;
 }
 
 function clearGradebookMatrix() {
@@ -115,7 +122,12 @@ async function loadClassGradebook() {
         <th>
           <div>${escapeHtml(a.name)}</div>
           <div class="muted" style="font-size:0.85em">${tAssessment(a.assessment_type)} · ${a.max_score}</div>
-          ${a.status === 'open' ? `<button class="btn btn-outline mt-1" data-mark="${a.id}">${t('enterGrades')}</button>` : ''}
+          ${statusBadge(a.status)}
+          <div class="mt-1">
+            ${a.status === 'open'
+              ? `<button class="btn btn-outline" data-mark="${a.id}">${t('enterGrades')}</button>`
+              : `<button class="btn btn-outline" data-view="${a.id}">${t('viewGrades')}</button>`}
+          </div>
         </th>`).join('')}
     </tr></thead><tbody>`;
 
@@ -131,33 +143,43 @@ async function loadClassGradebook() {
   document.getElementById('gradebook-matrix-wrap').innerHTML = header + body + '</tbody></table>';
 
   document.querySelectorAll('[data-mark]').forEach(btn => {
-    btn.addEventListener('click', () => openMarking(parseInt(btn.dataset.mark, 10)));
+    btn.addEventListener('click', () => openMarking(parseInt(btn.dataset.mark, 10), false));
+  });
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => openMarking(parseInt(btn.dataset.view, 10), true));
   });
 }
 
-async function openMarking(assessmentId) {
+async function openMarking(assessmentId, readOnly = false) {
   activeAssessmentId = assessmentId;
+  markingReadOnly = readOnly;
   showMarkingView();
 
   const { assessment, students, grades } = await API.get(`/api/assessments/${assessmentId}/marks`);
   const gradeMap = new Map(grades.map(g => [g.student_id, g]));
+  const isOpen = assessment.status === 'open' && !readOnly;
 
   document.getElementById('marking-title').textContent = assessment.name;
-  document.getElementById('marking-meta').textContent =
-    `${tAssessment(assessment.assessment_type)} · ${assessment.subject} · ${assessment.grade_level} ${assessment.section} · ${t('maxScore')}: ${assessment.max_score} · ${assessment.status === 'open' ? t('assessmentOpen') : t('assessmentClosed')}`;
+  document.getElementById('marking-meta').innerHTML =
+    `${tAssessment(assessment.assessment_type)} · ${escapeHtml(assessment.subject)} · ${escapeHtml(assessment.grade_level)} ${escapeHtml(assessment.section)} · ${t('maxScore')}: ${assessment.max_score} · ${statusBadge(assessment.status)}`;
 
   document.getElementById('marking-body').innerHTML = students.map(s => {
     const g = gradeMap.get(s.id);
+    const scoreCell = isOpen
+      ? `<input type="number" class="mark-input input-field" style="width:5rem"
+          data-student-id="${s.id}" min="0" max="${assessment.max_score}" step="0.5"
+          value="${g?.score ?? ''}" placeholder="—">`
+      : (g ? g.score : '—');
     return `<tr>
       <td>${escapeHtml(s.name)}</td>
-      <td><input type="number" class="mark-input input-field" style="width:5rem"
-          data-student-id="${s.id}" min="0" max="${assessment.max_score}" step="0.5"
-          value="${g?.score ?? ''}" placeholder="—"></td>
+      <td>${scoreCell}</td>
       <td>${assessment.max_score}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="3" class="muted">${t('noStudents')}</td></tr>`;
 
-  document.getElementById('close-assessment-btn').classList.toggle('section-hidden', assessment.status !== 'open');
+  document.getElementById('save-marks-btn').classList.toggle('section-hidden', !isOpen);
+  document.getElementById('close-assessment-btn').classList.toggle('section-hidden', !isOpen);
+  document.getElementById('delete-assessment-btn')?.classList.toggle('section-hidden', !isOpen);
 }
 
 async function saveMarks() {
@@ -170,6 +192,19 @@ async function saveMarks() {
   try {
     await API.post(`/api/assessments/${activeAssessmentId}/marks`, { entries });
     showToast(t('gradesSaved'));
+    showGradebookOverview();
+    await loadClassGradebook();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteActiveAssessment() {
+  if (!activeAssessmentId) return;
+  if (!confirm(t('deleteAssessmentConfirm'))) return;
+  try {
+    await API.delete(`/api/assessments/${activeAssessmentId}`);
+    showToast(t('updated'));
     showGradebookOverview();
     await loadClassGradebook();
   } catch (err) {
@@ -232,7 +267,7 @@ async function init() {
     await loadAssignments();
     if (!document.getElementById('panel-schedule').classList.contains('section-hidden')) loadSchedule();
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
-      if (activeAssessmentId) await openMarking(activeAssessmentId);
+      if (activeAssessmentId) await openMarking(activeAssessmentId, markingReadOnly);
       else await loadClassGradebook();
     }
     if (!document.getElementById('panel-data').classList.contains('section-hidden')) {
@@ -292,6 +327,7 @@ async function init() {
 
   document.getElementById('save-marks-btn').addEventListener('click', saveMarks);
   document.getElementById('close-assessment-btn').addEventListener('click', closeActiveAssessment);
+  document.getElementById('delete-assessment-btn')?.addEventListener('click', deleteActiveAssessment);
 
   document.getElementById('create-assessment-form').addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -1,8 +1,9 @@
 let currentUser = null;
 let usersCache = [];
 let studentsCache = [];
-let gradebookCache = [];
+let teachersCache = [];
 let logsCache = [];
+let adminActiveAssessmentId = null;
 
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -42,13 +43,6 @@ function wireAutoApply(ids, applyFn) {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('change', applyFn);
-    if (el.tagName === 'INPUT') {
-      let timer;
-      el.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(applyFn, 300);
-      });
-    }
   });
 }
 
@@ -57,33 +51,27 @@ function studentFiltersReady() {
 }
 
 function gradebookFiltersReady() {
-  return !!(document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value);
+  return !!(document.getElementById('gb-grade')?.value &&
+    document.getElementById('gb-section')?.value &&
+    document.getElementById('gb-subject')?.value);
 }
 
-async function uploadContent(form, contentType) {
-  const fd = new FormData(form);
-  fd.append('contentType', contentType);
-  await API.postForm('/api/uploads', fd);
-  showToast(t('uploaded'));
-  form.reset();
-  loadUploadsList();
+function usersByRole(role) {
+  return usersCache.filter(u => u.role === role && u.is_active);
 }
 
-async function loadUploadsList() {
-  const { uploads } = await API.get('/api/uploads');
-  const el = document.getElementById('uploads-list');
-  if (!uploads.length) { el.innerHTML = `<p class="muted">${t('noUploads')}</p>`; return; }
-  el.innerHTML = `<table><thead><tr><th>${t('title')}</th><th>${t('type')}</th><th>Date</th><th></th></tr></thead><tbody>
-    ${uploads.map(u => `<tr><td>${escapeHtml(u.title)}</td><td>${u.content_type}</td><td class="muted">${formatDate(u.created_at)}</td>
-    <td><button class="btn btn-danger" data-delete="${u.id}">${t('delete')}</button></td></tr>`).join('')}
-  </tbody></table>`;
-  el.querySelectorAll('[data-delete]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm(t('delete') + '?')) return;
-      await API.delete(`/api/uploads/${btn.dataset.delete}`);
-      loadUploadsList();
-    });
-  });
+function userOptions(role, selectedId) {
+  const none = `<option value="">${t('noneLinked')}</option>`;
+  const opts = usersByRole(role).map(u =>
+    `<option value="${u.id}"${String(u.id) === String(selectedId) ? ' selected' : ''}>${escapeHtml(u.full_name)} (${escapeHtml(u.email)})</option>`
+  ).join('');
+  return none + opts;
+}
+
+function statusBadge(status) {
+  const cls = status === 'open' ? 'status-open' : 'status-closed';
+  const label = status === 'open' ? t('assessmentOpen') : t('assessmentClosed');
+  return `<span class="status-badge ${cls}">${label}</span>`;
 }
 
 function renderUsers() {
@@ -112,6 +100,7 @@ function renderUsers() {
     sel.addEventListener('change', async () => {
       await API.patch(`/api/auth/users/${sel.dataset.userId}`, { role: sel.value });
       showToast(t('updated'));
+      loadUsers();
     });
   });
   document.querySelectorAll('[data-toggle]').forEach(btn => {
@@ -133,15 +122,71 @@ async function loadUsers() {
   const { users } = await API.get('/api/auth/users');
   usersCache = users;
   renderUsers();
+  if (!document.getElementById('panel-students').classList.contains('section-hidden') && studentFiltersReady()) {
+    renderStudents();
+  }
 }
 
 async function loadTeachers() {
   const { teachers } = await API.get('/api/teachers');
+  teachersCache = teachers;
+  const { grades, sections } = await API.get('/api/students/filters');
+
   document.getElementById('teachers-list').innerHTML = teachers.map(teacher => `
-    <div style="padding:0.75rem 0;border-bottom:1px solid var(--border, #ECECEC)">
+    <div class="card mb-1 teacher-card">
       <strong>${escapeHtml(teacher.full_name)}</strong> · ${escapeHtml(teacher.email)}
-      <p class="muted" style="margin:0.25rem 0 0">${teacher.assignments?.map(a => `${a.subject} (${a.grade} ${a.section})`).join(' · ') || t('noTeachers')}</p>
+      <ul class="assignment-list mt-1">
+        ${(teacher.assignments || []).map(a => `
+          <li>
+            ${escapeHtml(a.subject)} — ${escapeHtml(a.grade)} ${escapeHtml(a.section)}
+            <button class="btn btn-danger btn-inline" data-rm-assignment="${a.id}" data-teacher-id="${teacher.id}">${t('delete')}</button>
+          </li>`).join('') || `<li class="muted">${t('noClasses')}</li>`}
+      </ul>
+      <form class="form-grid form-grid-3 mt-1" data-assign-teacher="${teacher.id}">
+        <div class="form-row">
+          <label data-i18n="subject">Subject</label>
+          <input name="subject" required placeholder="Math">
+        </div>
+        <div class="form-row">
+          <label data-i18n="grade">Grade</label>
+          <select name="grade" required>${grades.map(g => `<option>${escapeHtml(g)}</option>`).join('')}</select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="section">Section</label>
+          <select name="section" required>${sections.map(s => `<option>${escapeHtml(s)}</option>`).join('')}</select>
+        </div>
+        <div class="align-end">
+          <button type="submit" class="btn btn-outline" data-i18n="assignClass">Assign class</button>
+        </div>
+      </form>
     </div>`).join('') || `<p class="muted">${t('noTeachers')}</p>`;
+
+  document.querySelectorAll('[data-assign-teacher]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      try {
+        await API.post(`/api/teachers/${form.dataset.assignTeacher}/assignments`, {
+          subject: fd.get('subject'),
+          grade: fd.get('grade'),
+          section: fd.get('section')
+        });
+        showToast(t('updated'));
+        loadTeachers();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
+
+  document.querySelectorAll('[data-rm-assignment]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('delete') + '?')) return;
+      try {
+        await API.delete(`/api/teachers/${btn.dataset.teacherId}/assignments/${btn.dataset.rmAssignment}`);
+        showToast(t('updated'));
+        loadTeachers();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
 }
 
 function clearStudentsTable() {
@@ -169,73 +214,174 @@ function renderStudents() {
       <td>${escapeHtml(s.name)}</td>
       <td>${escapeHtml(s.grade)}</td>
       <td>${escapeHtml(s.section)}</td>
-      <td>${escapeHtml(s.parent_name || '—')}</td>
-      <td>${escapeHtml(s.user_email || '—')}</td>
+      <td><select class="input-field" data-link-parent="${s.id}">${userOptions('parent', s.parent_user_id)}</select></td>
+      <td><select class="input-field" data-link-user="${s.id}">${userOptions('student', s.user_id)}</select></td>
     </tr>`).join('') || `<tr><td colspan="5" class="muted">${t('noStudents')}</td></tr>`;
+
+  document.querySelectorAll('[data-link-parent]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      try {
+        await API.patch(`/api/students/${sel.dataset.linkParent}`, {
+          parentUserId: sel.value ? parseInt(sel.value, 10) : null
+        });
+        showToast(t('updated'));
+        loadStudents();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
+
+  document.querySelectorAll('[data-link-user]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      try {
+        await API.patch(`/api/students/${sel.dataset.linkUser}`, {
+          userId: sel.value ? parseInt(sel.value, 10) : null
+        });
+        showToast(t('updated'));
+        loadStudents();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
 }
 
 async function loadStudents() {
   const grade = document.getElementById('filter-grade')?.value || '';
   const section = document.getElementById('filter-section')?.value || '';
-
   if (!grade || !section) {
     clearStudentsTable();
     return;
   }
-
-  const params = new URLSearchParams({ grade, section });
-  const { students } = await API.get('/api/students?' + params.toString());
+  const { students } = await API.get(`/api/students?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}`);
   studentsCache = students;
   renderStudents();
 }
 
-function clearMasterGradebook(messageKey = 'selectGradeSectionHint') {
-  gradebookCache = [];
-  document.getElementById('gradebook-table').innerHTML = emptyTablePrompt(6, messageKey);
-}
-
-function renderMasterGradebook() {
-  if (!gradebookFiltersReady()) {
-    clearMasterGradebook();
+async function populateGbSubjects() {
+  const grade = document.getElementById('gb-grade')?.value || '';
+  const section = document.getElementById('gb-section')?.value || '';
+  const sel = document.getElementById('gb-subject');
+  const saved = sel.value;
+  if (!grade || !section) {
+    sel.innerHTML = `<option value="">${t('selectSubject')}</option>`;
     return;
   }
+  const { subjects } = await API.get(
+    `/api/assessments/subjects?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}`
+  );
+  sel.innerHTML = `<option value="">${t('selectSubject')}</option>` +
+    subjects.map(s => `<option value="${escapeHtml(s)}"${s === saved ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('');
+}
 
-  const sortKey = document.getElementById('gradebook-sort')?.value || 'student-asc';
-  const grades = sortItems(gradebookCache, sortKey, {
-    'student-asc': g => g.student_name,
-    'score-desc': g => Number(g.score),
-    'score-asc': g => Number(g.score),
-    'subject-asc': g => g.subject,
-    'grade-asc': g => `${g.grade_level} ${g.section}`
-  });
+function clearAdminGradebook() {
+  document.getElementById('admin-gradebook-matrix').innerHTML =
+    emptyPanelPrompt('selectGradeSectionSubjectHint');
+}
 
-  document.getElementById('gradebook-table').innerHTML = grades.map(g => `
-    <tr>
-      <td>${escapeHtml(g.student_name)}</td>
-      <td>${escapeHtml(g.grade_level)} ${escapeHtml(g.section)}</td>
-      <td>${escapeHtml(g.subject)}</td>
-      <td>${tAssessment(g.assessment_type)}</td>
-      <td>${escapeHtml(g.assessment_name)}</td>
-      <td>${g.score}/${g.max_score}</td>
-    </tr>`).join('') || `<tr><td colspan="6" class="muted">${t('noGrades')}</td></tr>`;
+function showAdminGradebookOverview() {
+  adminActiveAssessmentId = null;
+  document.getElementById('admin-gradebook-overview').classList.remove('section-hidden');
+  document.getElementById('admin-gradebook-marking').classList.add('section-hidden');
+}
+
+async function adminViewMarks(assessmentId, readOnly = true) {
+  adminActiveAssessmentId = assessmentId;
+  document.getElementById('admin-gradebook-overview').classList.add('section-hidden');
+  document.getElementById('admin-gradebook-marking').classList.remove('section-hidden');
+
+  const { assessment, students, grades } = await API.get(`/api/assessments/${assessmentId}/marks`);
+  const gradeMap = new Map(grades.map(g => [g.student_id, g]));
+
+  document.getElementById('admin-marking-title').textContent = assessment.name;
+  document.getElementById('admin-marking-meta').innerHTML =
+    `${tAssessment(assessment.assessment_type)} · ${escapeHtml(assessment.subject)} · ${escapeHtml(assessment.grade_level)} ${escapeHtml(assessment.section)} · ${t('maxScore')}: ${assessment.max_score} · ${statusBadge(assessment.status)}`;
+
+  document.getElementById('admin-marking-body').innerHTML = students.map(s => {
+    const g = gradeMap.get(s.id);
+    return `<tr>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${g ? g.score : '—'}</td>
+      <td>${assessment.max_score}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="3" class="muted">${t('noStudents')}</td></tr>`;
 }
 
 async function loadMasterGradebook() {
-  const grade = document.getElementById('gb-grade')?.value || '';
-  const section = document.getElementById('gb-section')?.value || '';
-
-  if (!grade || !section) {
-    clearMasterGradebook();
+  if (!gradebookFiltersReady()) {
+    clearAdminGradebook();
     return;
   }
 
-  const subject = document.getElementById('gb-subject')?.value.trim() || '';
-  const params = new URLSearchParams({ grade, section });
-  if (subject) params.set('subject', subject);
+  const grade = document.getElementById('gb-grade').value;
+  const section = document.getElementById('gb-section').value;
+  const subject = document.getElementById('gb-subject').value;
 
-  const { grades } = await API.get('/api/gradebook?' + params.toString());
-  gradebookCache = grades;
-  renderMasterGradebook();
+  const { students, assessments, grades } = await API.get(
+    `/api/gradebook/class-view?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}&subject=${encodeURIComponent(subject)}`
+  );
+
+  const scoreMap = new Map();
+  grades.forEach(g => scoreMap.set(`${g.student_id}:${g.assessment_id}`, g));
+
+  if (!students.length) {
+    document.getElementById('admin-gradebook-matrix').innerHTML = `<p class="muted">${t('noStudents')}</p>`;
+    return;
+  }
+  if (!assessments.length) {
+    document.getElementById('admin-gradebook-matrix').innerHTML = `<p class="empty-prompt">${t('noAssessmentsYet')}</p>`;
+    return;
+  }
+
+  const header = `<table><thead><tr><th>${t('student')}</th>${assessments.map(a => `
+    <th>
+      <div>${escapeHtml(a.name)}</div>
+      <div class="muted" style="font-size:0.85em">${tAssessment(a.assessment_type)} · ${a.max_score}</div>
+      ${statusBadge(a.status)}
+      <div class="mt-1">
+        <button class="btn btn-outline" data-view="${a.id}">${t('viewGrades')}</button>
+        ${a.status === 'open'
+          ? `<button class="btn btn-outline" data-close="${a.id}">${t('closeAssessment')}</button>`
+          : `<button class="btn btn-outline" data-reopen="${a.id}">${t('reopenAssessment')}</button>`}
+        <button class="btn btn-danger" data-del-assessment="${a.id}">${t('delete')}</button>
+      </div>
+    </th>`).join('')}</tr></thead><tbody>`;
+
+  const body = students.map(student => `
+    <tr>
+      <td>${escapeHtml(student.name)}</td>
+      ${assessments.map(a => {
+        const entry = scoreMap.get(`${student.id}:${a.id}`);
+        return `<td>${entry ? `${entry.score}/${entry.max_score}` : '—'}</td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  document.getElementById('admin-gradebook-matrix').innerHTML = header + body + '</tbody></table>';
+
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => adminViewMarks(parseInt(btn.dataset.view, 10)));
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await API.patch(`/api/assessments/${btn.dataset.close}`, { status: 'closed' });
+      showToast(t('updated'));
+      loadMasterGradebook();
+    });
+  });
+  document.querySelectorAll('[data-reopen]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await API.patch(`/api/assessments/${btn.dataset.reopen}`, { status: 'open' });
+      showToast(t('updated'));
+      loadMasterGradebook();
+    });
+  });
+  document.querySelectorAll('[data-del-assessment]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('deleteAssessmentConfirm'))) return;
+      try {
+        await API.delete(`/api/assessments/${btn.dataset.delAssessment}`);
+        showToast(t('updated'));
+        loadMasterGradebook();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
 }
 
 async function loadFilters() {
@@ -259,6 +405,7 @@ async function loadFilters() {
       `<option${s === saved ? ' selected' : ''}>${s}</option>`
     ).join('');
   });
+  await populateGbSubjects();
 }
 
 function renderLogs() {
@@ -285,10 +432,6 @@ async function loadLogs() {
   renderLogs();
 }
 
-function wireDownloads() {
-  wireSampleDataPanel('panel-sample');
-}
-
 async function init() {
   initLanguageToggle();
   currentUser = await requireRole('admin');
@@ -304,14 +447,14 @@ async function init() {
       else clearStudentsTable();
     }
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
-      if (gradebookFiltersReady()) renderMasterGradebook();
-      else clearMasterGradebook();
+      if (adminActiveAssessmentId) adminViewMarks(adminActiveAssessmentId);
+      else if (gradebookFiltersReady()) loadMasterGradebook();
+      else clearAdminGradebook();
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
     if (!document.getElementById('panel-sample').classList.contains('section-hidden')) {
       resetSampleDataPreview('panel-sample');
     }
-    loadUploadsList();
   });
 
   document.querySelectorAll('.tab').forEach(tab => {
@@ -319,7 +462,10 @@ async function init() {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === 'teachers') loadTeachers();
       if (tab.dataset.tab === 'students') loadStudents();
-      if (tab.dataset.tab === 'gradebook') loadMasterGradebook();
+      if (tab.dataset.tab === 'gradebook') {
+        showAdminGradebookOverview();
+        loadMasterGradebook();
+      }
       if (tab.dataset.tab === 'sample') resetSampleDataPreview('panel-sample');
       if (tab.dataset.tab === 'logs') loadLogs();
     });
@@ -327,11 +473,28 @@ async function init() {
 
   wireSortSelect('users-sort', renderUsers);
   wireSortSelect('students-sort', renderStudents);
-  wireSortSelect('gradebook-sort', renderMasterGradebook);
   wireSortSelect('logs-sort', renderLogs);
 
   wireAutoApply(['filter-grade', 'filter-section'], loadStudents);
-  wireAutoApply(['gb-grade', 'gb-section', 'gb-subject'], loadMasterGradebook);
+  document.getElementById('gb-grade').addEventListener('change', async () => {
+    await populateGbSubjects();
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  });
+  document.getElementById('gb-section').addEventListener('change', async () => {
+    await populateGbSubjects();
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  });
+  document.getElementById('gb-subject').addEventListener('change', () => {
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  });
+
+  document.getElementById('admin-back-gradebook').addEventListener('click', () => {
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  });
 
   document.getElementById('create-user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -362,25 +525,16 @@ async function init() {
     } catch (err) { showToast(err.message, 'error'); }
   });
 
-  document.getElementById('schedule-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try { await uploadContent(e.target, 'schedule'); } catch (err) { showToast(err.message, 'error'); }
-  });
-  document.getElementById('grades-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try { await uploadContent(e.target, 'grades'); } catch (err) { showToast(err.message, 'error'); }
-  });
-
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await API.post('/api/auth/logout');
     window.location.href = 'index.html';
   });
 
-  wireDownloads();
+  wireSampleDataPanel('panel-sample');
   await loadFilters();
   clearStudentsTable();
-  clearMasterGradebook();
-  await Promise.all([loadUsers(), loadUploadsList()]);
+  clearAdminGradebook();
+  await loadUsers();
 }
 
 init();
