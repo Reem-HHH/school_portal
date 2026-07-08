@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { RBAC_SCHEMA, RBAC_SCHEMA_SQLITE, seedRbacData } = require('./rbac-schema');
 
 const usePg = !!process.env.DATABASE_URL;
 let pool = null;
@@ -67,6 +68,8 @@ async function initDb() {
       CREATE INDEX IF NOT EXISTS idx_uploads_type ON content_uploads(content_type, is_active);
       CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);
     `);
+
+    await pool.query(RBAC_SCHEMA);
   } else {
     const Database = require('better-sqlite3');
     const path = require('path');
@@ -130,9 +133,12 @@ async function initDb() {
 
       CREATE INDEX IF NOT EXISTS idx_uploads_type ON content_uploads(content_type, is_active);
     `);
+
+    sqlite.exec(RBAC_SCHEMA_SQLITE);
   }
 
   await seedAdmin();
+  await seedRbacData({ get, all, run }, usePg);
 }
 
 async function seedAdmin() {

@@ -72,9 +72,28 @@ async function requireAuth() {
 
 async function redirectIfAuthed() {
   try {
-    await API.get('/api/auth/me');
-    window.location.href = 'portal.html';
+    const { dashboard } = await API.get('/api/auth/me');
+    window.location.href = dashboard || 'portal.html';
   } catch { /* not logged in */ }
+}
+
+function dashboardForRole(role) {
+  const map = {
+    admin: 'dashboard-admin.html',
+    teacher: 'dashboard-teacher.html',
+    student: 'dashboard-student.html',
+    parent: 'dashboard-student.html'
+  };
+  return map[role] || 'index.html';
+}
+
+async function requireRole(...roles) {
+  const { user, dashboard } = await API.get('/api/auth/me');
+  if (!roles.includes(user.role)) {
+    window.location.href = dashboard || 'index.html';
+    return null;
+  }
+  return user;
 }
 
 function formatDate(iso) {

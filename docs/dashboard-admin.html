@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="api-base" content="">
+  <title>Admin Dashboard — School Portal</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="dashboard-admin.html" class="logo">Admin Dashboard</a>
+      <nav class="nav">
+        <span id="user-label" class="muted"></span>
+        <button id="logout-btn">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="tabs">
+      <button class="tab active" data-tab="users">Users</button>
+      <button class="tab" data-tab="teachers">Teachers</button>
+      <button class="tab" data-tab="students">Students</button>
+      <button class="tab" data-tab="gradebook">Master Gradebook</button>
+      <button class="tab" data-tab="uploads">Uploads</button>
+      <button class="tab" data-tab="logs">Activity Log</button>
+    </div>
+
+    <!-- Users -->
+    <div id="panel-users" class="tab-panel">
+      <h2>Create user</h2>
+      <form id="create-user-form" class="card form-grid form-grid-3">
+        <div class="form-row"><label>Name</label><input id="new-name" required></div>
+        <div class="form-row"><label>Email</label><input id="new-email" type="email" required></div>
+        <div class="form-row"><label>Password</label><input id="new-password" type="password" required minlength="6"></div>
+        <div class="form-row">
+          <label>Role</label>
+          <select id="new-role">
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+            <option value="student">Student</option>
+          </select>
+        </div>
+        <div style="align-self:end"><button type="submit" class="btn">Create user</button></div>
+      </form>
+      <div class="data-table-wrap" style="margin-top:1rem">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Teachers -->
+    <div id="panel-teachers" class="tab-panel section-hidden">
+      <h2>Teacher directory</h2>
+      <div id="teachers-list" class="card"></div>
+    </div>
+
+    <!-- Students -->
+    <div id="panel-students" class="tab-panel section-hidden">
+      <h2>Student directory</h2>
+      <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+        <select id="filter-grade" class="input-field" style="width:auto"><option value="">All grades</option></select>
+        <select id="filter-section" class="input-field" style="width:auto"><option value="">All sections</option></select>
+        <button id="filter-students-btn" class="btn btn-outline">Filter</button>
+      </div>
+      <form id="create-student-form" class="card form-grid form-grid-3" style="margin-bottom:1rem">
+        <div class="form-row"><label>Name</label><input id="stu-name" required></div>
+        <div class="form-row"><label>Grade</label><input id="stu-grade" placeholder="Grade 5" required></div>
+        <div class="form-row"><label>Section</label><input id="stu-section" placeholder="Section A" required></div>
+        <div style="align-self:end"><button type="submit" class="btn">Add student</button></div>
+      </form>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Grade</th><th>Section</th><th>Parent</th><th>Linked user</th></tr></thead>
+          <tbody id="students-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Master Gradebook -->
+    <div id="panel-gradebook" class="tab-panel section-hidden">
+      <h2>Master gradebook</h2>
+      <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+        <select id="gb-grade" class="input-field" style="width:auto"><option value="">All grades</option></select>
+        <select id="gb-section" class="input-field" style="width:auto"><option value="">All sections</option></select>
+        <input id="gb-subject" class="input-field" placeholder="Subject filter" style="width:auto">
+        <button id="gb-filter-btn" class="btn btn-outline">Apply</button>
+      </div>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Student</th><th>Class</th><th>Subject</th><th>Type</th><th>Assessment</th><th>Score</th></tr></thead>
+          <tbody id="gradebook-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Uploads (existing) -->
+    <div id="panel-uploads" class="tab-panel section-hidden">
+      <h2>Upload schedule</h2>
+      <form id="schedule-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
+        <div class="form-row"><label>Title</label><input name="title" required></div>
+        <div class="form-row"><label>Label</label><input name="label"></div>
+        <div class="form-row" style="grid-column:1/-1"><label>File</label><input name="file" type="file" required></div>
+        <div><button type="submit" class="btn">Upload schedule</button></div>
+      </form>
+      <h2>Upload grades file</h2>
+      <form id="grades-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
+        <div class="form-row"><label>Title</label><input name="title" required></div>
+        <div class="form-row"><label>Label</label><input name="label"></div>
+        <div class="form-row" style="grid-column:1/-1"><label>File</label><input name="file" type="file" required></div>
+        <div><button type="submit" class="btn">Upload grades</button></div>
+      </form>
+      <div id="uploads-list" class="card" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- Logs -->
+    <div id="panel-logs" class="tab-panel section-hidden">
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody id="logs-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/dashboard-admin.js"></script>
+</body>
+</html>

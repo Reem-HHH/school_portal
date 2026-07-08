@@ -54,7 +54,17 @@ async function buildPicker(containerId, type, viewId) {
 
 async function init() {
   initLanguageToggle();
-  currentUser = await requireAuth();
+  try {
+    const { user, dashboard } = await API.get('/api/auth/me');
+    if (dashboard && dashboard !== 'portal.html') {
+      window.location.href = dashboard;
+      return;
+    }
+    currentUser = user;
+  } catch {
+    window.location.href = 'index.html';
+    return;
+  }
   if (!currentUser) return;
 
   document.getElementById('welcome-heading').textContent = `${t('welcome')}, ${currentUser.full_name}`;

@@ -8,6 +8,10 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const uploadsRoutes = require('./routes/uploads');
 const auditRoutes = require('./routes/audit');
+const studentsRoutes = require('./routes/students');
+const teachersRoutes = require('./routes/teachers');
+const gradebookRoutes = require('./routes/gradebook');
+const schedulesRoutes = require('./routes/schedules');
 const { attachUser } = require('./middleware/auth');
 const { initDb } = require('./db/index');
 
@@ -52,17 +56,33 @@ app.use(attachUser);
 app.use('/api/auth', authRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/students', studentsRoutes);
+app.use('/api/teachers', teachersRoutes);
+app.use('/api/gradebook', gradebookRoutes);
+app.use('/api/schedules', schedulesRoutes);
 
 app.use(express.static(DOCS));
 
 app.get('/admin', (_req, res) => {
-  res.sendFile(path.join(DOCS, 'admin.html'));
+  res.sendFile(path.join(DOCS, 'dashboard-admin.html'));
+});
+
+app.get('/dashboard-admin', (_req, res) => {
+  res.sendFile(path.join(DOCS, 'dashboard-admin.html'));
+});
+
+app.get('/dashboard-teacher', (_req, res) => {
+  res.sendFile(path.join(DOCS, 'dashboard-teacher.html'));
+});
+
+app.get('/dashboard-student', (_req, res) => {
+  res.sendFile(path.join(DOCS, 'dashboard-student.html'));
 });
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   if (req.path.includes('.')) return next();
-  res.sendFile(path.join(DOCS, 'portal.html'));
+  res.sendFile(path.join(DOCS, 'index.html'));
 });
 
 initDb().then(() => {

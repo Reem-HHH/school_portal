@@ -33,6 +33,14 @@
             <option value="student">Student</option>
           </select>
         </div>
+        <div id="student-fields" class="form-row section-hidden">
+          <label for="grade">Grade</label>
+          <input id="grade" type="text" placeholder="e.g. Grade 5">
+        </div>
+        <div id="section-fields" class="form-row section-hidden">
+          <label for="section">Section</label>
+          <input id="section" type="text" placeholder="e.g. Section A">
+        </div>
         <button type="submit" class="btn" data-i18n="createAccount">Create account</button>
       </form>
 
@@ -51,16 +59,35 @@
     initLanguageToggle();
     redirectIfAuthed();
 
+    const roleSelect = document.getElementById('role');
+    const studentFields = document.getElementById('student-fields');
+    const sectionFields = document.getElementById('section-fields');
+    function toggleStudentFields() {
+      const show = roleSelect.value === 'student';
+      studentFields.classList.toggle('section-hidden', !show);
+      sectionFields.classList.toggle('section-hidden', !show);
+      document.getElementById('grade').required = show;
+      document.getElementById('section').required = show;
+    }
+    roleSelect.addEventListener('change', toggleStudentFields);
+    toggleStudentFields();
+
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
-        await API.post('/api/auth/register', {
+        const role = roleSelect.value;
+        const payload = {
           fullName: document.getElementById('fullName').value,
           email: document.getElementById('email').value,
           password: document.getElementById('password').value,
-          role: document.getElementById('role').value
-        });
-        window.location.href = 'portal.html';
+          role
+        };
+        if (role === 'student') {
+          payload.grade = document.getElementById('grade').value;
+          payload.section = document.getElementById('section').value;
+        }
+        const { dashboard } = await API.post('/api/auth/register', payload);
+        window.location.href = dashboard || 'index.html';
       } catch (err) {
         showToast(err.message, 'error');
       }

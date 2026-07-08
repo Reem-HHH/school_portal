@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="api-base" content="">
+  <title>Teacher Dashboard — School Portal</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="dashboard-teacher.html" class="logo">Teacher Dashboard</a>
+      <nav class="nav">
+        <span id="user-label" class="muted"></span>
+        <button id="logout-btn">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="tabs">
+      <button class="tab active" data-tab="gradebook">Gradebook</button>
+      <button class="tab" data-tab="schedule">My Schedule</button>
+    </div>
+
+    <div id="panel-gradebook" class="tab-panel">
+      <h2>Formative assessment gradebook</h2>
+      <div class="card form-grid form-grid-3" style="margin-bottom:1rem">
+        <div class="form-row">
+          <label>Class</label>
+          <select id="class-select"></select>
+        </div>
+        <div class="form-row">
+          <label>Assessment type</label>
+          <select id="assessment-type">
+            <option value="quiz">Quiz</option>
+            <option value="exam">Exam</option>
+            <option value="assignment">Assignment</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Assessment name</label>
+          <input id="assessment-name" placeholder="Quiz 1" required>
+        </div>
+      </div>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Student</th><th>Score</th><th>Out of</th></tr></thead>
+          <tbody id="gradebook-body"></tbody>
+        </table>
+      </div>
+      <button id="save-grades-btn" class="btn" style="margin-top:1rem">Save grades</button>
+    </div>
+
+    <div id="panel-schedule" class="tab-panel section-hidden">
+      <h2>My schedule</h2>
+      <div id="schedule-view" class="data-table-wrap"></div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/dashboard-teacher.js"></script>
+</body>
+</html>

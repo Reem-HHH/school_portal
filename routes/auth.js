@@ -3,12 +3,13 @@ const bcrypt = require('bcryptjs');
 const db = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { logAction } = require('../lib/audit');
+const { dashboardPath } = require('../lib/rbac');
 
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, fullName, role } = req.body;
+    const { email, password, fullName, role, grade, section } = req.body;
 
     if (!email || !password || !fullName || !role) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -17,6 +18,10 @@ router.post('/register', async (req, res) => {
     const allowedRoles = ['parent', 'student'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'Registration is only available for parent and student roles' });
+    }
+
+    if (role === 'student' && (!grade || !section)) {
+      return res.status(400).json({ error: 'Grade and section are required for student accounts' });
     }
 
     if (password.length < 6) {
@@ -39,6 +44,15 @@ router.post('/register', async (req, res) => {
       [result.lastInsertRowid]
     );
 
+    if (role === 'student') {
+      const activeVal = db.usePg ? true : 1;
+      await db.run(
+        `INSERT INTO students (name, grade, section, user_id, is_active)
+         VALUES (?, ?, ?, ?, ?)`,
+        [fullName.trim(), grade.trim(), section.trim(), user.id, activeVal]
+      );
+    }
+
     req.session.user = user;
     await logAction(req, {
       action: 'user.register',
@@ -47,7 +61,7 @@ router.post('/register', async (req, res) => {
       details: { email: user.email, role: user.role }
     });
 
-    res.status(201).json({ user });
+    res.status(201).json({ user, dashboard: dashboardPath(user.role) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -91,7 +105,7 @@ router.post('/login', async (req, res) => {
       details: { email: user.email, role: user.role }
     });
 
-    res.json({ user: sessionUser });
+    res.json({ user: sessionUser, dashboard: dashboardPath(user.role) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -117,7 +131,10 @@ router.get('/me', (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
-  res.json({ user: req.session.user });
+  res.json({
+    user: req.session.user,
+    dashboard: dashboardPath(req.session.user.role)
+  });
 });
 
 router.post('/users', requireAuth, requireRole('admin'), async (req, res) => {

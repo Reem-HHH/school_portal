@@ -49,11 +49,11 @@
         return;
       }
       try {
-        await API.post('/api/auth/login', {
+        const { dashboard } = await API.post('/api/auth/login', {
           email: document.getElementById('email').value,
           password: document.getElementById('password').value
         });
-        window.location.href = 'portal.html';
+        window.location.href = dashboard || 'index.html';
       } catch (err) {
         showToast(err.message, 'error');
       }

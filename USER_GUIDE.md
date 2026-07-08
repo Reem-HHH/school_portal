@@ -24,12 +24,14 @@ This guide explains how to run the School Portal on your computer (locally) or o
 
 ## What this app does
 
-The School Portal is a minimal website where:
+The School Portal is a school management website with **role-based access control (RBAC)**:
 
-- **Admins** can upload class schedules and grade reports (as images or Excel/CSV files), manage users, and view an activity log of all changes.
-- **Teachers, parents, and students** can sign in and view published schedules and grades.
-- **Parents and students** can create their own accounts via the registration page.
-- All important actions (login, uploads, user changes) are recorded in an **activity log**.
+- **Admins** manage users, browse teachers and students, view a master gradebook, upload legacy schedule/grade files, and review the activity log.
+- **Teachers** enter formative assessment grades (quizzes/exams) by subject and class, and view their personal teaching schedule.
+- **Students** see their profile, class timetable, and formative grades.
+- **Parents** see the same information for linked children (linked by an admin).
+- **Parents and students** can self-register; teachers and admins are created by an admin.
+- All important actions are recorded in an **activity log**.
 
 ---
 
@@ -41,6 +43,13 @@ When the app starts for the first time, it creates a default admin account:
 |-------|-------|
 | **Email** | `admin@school.com` |
 | **Password** | `admin123` |
+
+A sample teacher account is also seeded on first run:
+
+| Field | Value |
+|-------|-------|
+| **Email** | `teacher@school.com` |
+| **Password** | `teacher123` |
 
 ### Important notes about passwords
 
@@ -235,31 +244,36 @@ Push changes to GitHub `main` branch. If Render is connected to your repo, it re
 
 ## Using the website after login
 
+After login you are taken to your **role dashboard** (admin, teacher, or student/parent).
+
 ### Main pages
 
-| Page | URL (local) | URL (online) | Who can access |
-|------|-------------|--------------|----------------|
-| Login | http://localhost:3000/index.html | https://your-app.onrender.com/index.html | Everyone |
-| Register | …/register.html | …/register.html | Everyone (parent/student only) |
-| Portal (home) | …/portal.html | …/portal.html | Logged-in users |
-| Admin | …/admin.html | …/admin.html | Admin only |
+| Page | URL (local) | Who can access |
+|------|-------------|----------------|
+| Login | http://localhost:3000/index.html | Everyone |
+| Register | …/register.html | Everyone (parent/student only) |
+| Admin dashboard | …/dashboard-admin.html | Admin only |
+| Teacher dashboard | …/dashboard-teacher.html | Teacher only |
+| Student / parent dashboard | …/dashboard-student.html | Student and parent only |
+| Legacy portal | …/portal.html | Redirects to your role dashboard |
 
-### Portal navigation
+### Role dashboards
 
-After login, the main portal has three sections:
+**Admin dashboard** tabs: Users, Teachers, Students (filter by grade/section), Master Gradebook, Uploads, Activity Log.
 
-1. **Home** — Welcome message and your role.
-2. **Schedules** — View schedules uploaded by admin. Select an item from the list to display it.
-3. **Grades** — View grade reports uploaded by admin. Select an item from the list to display it.
+**Teacher dashboard** tabs: Gradebook (enter formative grades by class/subject), Schedule (personal timetable).
+
+**Student / parent dashboard** tabs: Profile, Timetable, Grades (formative assessments). Parents with multiple children can switch between them.
 
 ### Register a new account (parent or student)
 
 1. Go to the login page.
 2. Click **Register**.
 3. Fill in name, email, password, and choose **Parent** or **Student**.
-4. Submit — you are logged in and taken to the portal.
+4. For **Student**, also enter grade and section (e.g. `Grade 5`, `Section A`).
+5. Submit — you are logged in and taken to your dashboard.
 
-Teachers and additional admins must be created by an admin (see below).
+Teachers and additional admins must be created by an admin (see below). Parents must be linked to students by an admin (Students tab → edit student record).
 
 ### Log out
 
@@ -269,9 +283,9 @@ Click **Logout** in the top navigation.
 
 ## Admin guide — uploads, users, activity log
 
-Open **Admin** from the portal (only visible if you are logged in as admin).
+After login as admin, open **Admin Dashboard** (`dashboard-admin.html`).
 
-The admin panel has three tabs: **Uploads**, **Users**, and **Activity log**.
+The admin dashboard has six tabs: **Users**, **Teachers**, **Students**, **Master Gradebook**, **Uploads**, and **Activity log**.
 
 ### Upload a schedule
 
@@ -393,14 +407,14 @@ Maximum file size: **10 MB** per upload.
 
 ## User roles explained
 
-| Role | Can do |
-|------|--------|
-| **Admin** | Everything: upload schedules/grades, manage users, view activity log, access Admin panel |
-| **Teacher** | View schedules and grades on the portal (no admin panel unless promoted) |
-| **Parent** | View schedules and grades; can self-register |
-| **Student** | View schedules and grades; can self-register |
+| Role | Dashboard | Can do |
+|------|-----------|--------|
+| **Admin** | Admin dashboard | Manage users, view teacher directory, browse/filter students, master gradebook, upload legacy files, activity log |
+| **Teacher** | Teacher dashboard | Enter formative grades for assigned classes, view personal schedule |
+| **Student** | Student dashboard | View profile, class timetable, formative grades |
+| **Parent** | Student dashboard | View linked children's profile, timetable, and formative grades |
 
-Only **admin** sees the **Admin** link in the navigation.
+Each role is restricted to its own dashboard and API endpoints. Attempting to access another role's pages redirects you to your dashboard.
 
 ---
 
