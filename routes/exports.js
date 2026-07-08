@@ -2,7 +2,14 @@ const express = require('express');
 const db = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { toCsv } = require('../lib/csv');
-const { buildBrandedBuffer, buildScheduleTimetableBuffer, groupScheduleEntries } = require('../lib/branded-export');
+const {
+  buildBrandedBuffer,
+  buildGradebookBuffer,
+  buildScheduleTimetableBuffer,
+  groupScheduleEntries,
+  groupGradebookEntries,
+  GRADEBOOK_SHEET_COLUMNS
+} = require('../lib/branded-export');
 
 const router = express.Router();
 const activeClause = db.usePg ? 'is_active = true' : 'is_active = 1';
@@ -22,6 +29,30 @@ async function sendBrandedXlsx(res, filename, options) {
 
 function wantsCsv(req) {
   return String(req.query.format || '').toLowerCase() === 'csv';
+}
+
+async function sendGradebookXlsx(res, filename, rows, { workbookTitle = 'Gradebook Export' } = {}) {
+  const grouped = groupGradebookEntries(rows);
+  const sheets = grouped.length
+    ? grouped.map(group => ({
+      sheetName: group.sheetName,
+      title: group.title,
+      subtitle: group.subtitle,
+      columns: GRADEBOOK_SHEET_COLUMNS,
+      rows: group.rows
+    }))
+    : [{
+      sheetName: 'Gradebook',
+      title: workbookTitle,
+      subtitle: 'Al Kharran · Grades 1–4',
+      columns: GRADEBOOK_SHEET_COLUMNS,
+      rows: []
+    }];
+
+  const buffer = await buildGradebookBuffer({ sheets });
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(Buffer.from(buffer));
 }
 
 async function sendScheduleTimetableXlsx(res, filename, rows, { teacherName = '' } = {}) {
@@ -142,23 +173,15 @@ router.get('/grades', requireAuth, async (req, res) => {
     sql += ' ORDER BY fg.grade_level, fg.section, fg.subject, s.name, fg.assessment_name';
     const grades = await db.all(sql, params);
 
-    await respondExport(req, res, {
-      baseName: 'grades',
-      title: user.role === 'teacher' ? 'My Gradebook Export' : 'Gradebook Export',
-      sheetName: 'Grades',
-      csvHeaders: ['student_name', 'grade_level', 'section', 'subject', 'assessment_type', 'assessment_name', 'score', 'max_score', 'teacher_name'],
-      columns: [
-        { key: 'student_name', header: 'Student', width: 22 },
-        { key: 'grade_level', header: 'Grade', width: 12 },
-        { key: 'section', header: 'Section', width: 12 },
-        { key: 'subject', header: 'Subject', width: 16 },
-        { key: 'assessment_type', header: 'Type', width: 14 },
-        { key: 'assessment_name', header: 'Assessment', width: 22 },
-        { key: 'score', header: 'Score', width: 10 },
-        { key: 'max_score', header: 'Out of', width: 10 },
-        { key: 'teacher_name', header: 'Teacher', width: 22 }
-      ],
-      rows: grades
+    if (wantsCsv(req)) {
+      return sendCsv(res, 'grades.csv',
+        ['student_name', 'grade_level', 'section', 'subject', 'assessment_type', 'assessment_name', 'score', 'max_score', 'teacher_name'],
+        grades
+      );
+    }
+
+    await sendGradebookXlsx(res, 'grades.xlsx', grades, {
+      workbookTitle: user.role === 'teacher' ? 'My Gradebook Export' : 'Gradebook Export'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
