@@ -74,12 +74,7 @@ function wireDownloads() {
   document.getElementById('download-schedule-btn')?.addEventListener('click', () => {
     downloadCsv('/api/exports/schedules', 'my-schedule.csv').catch(err => showToast(err.message, 'error'));
   });
-  document.querySelectorAll('[data-download]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.download;
-      downloadCsv(`/api/exports/${type}`, `${type}.csv`).catch(err => showToast(err.message, 'error'));
-    });
-  });
+  wireSampleDataPanel('panel-data');
 }
 
 async function init() {

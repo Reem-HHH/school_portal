@@ -75,12 +75,26 @@
     </div>
 
     <div id="panel-data" class="tab-panel section-hidden">
-      <h2 data-i18n="sampleDataTitle">Sample data downloads</h2>
-      <p class="muted" data-i18n="sampleDataDesc">Download dummy data as CSV files. Use these for testing or as import templates.</p>
-      <div class="card" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
-        <button class="btn btn-outline" data-download="students" data-i18n="downloadStudents">Download students (CSV)</button>
-        <button class="btn btn-outline" data-download="grades" data-i18n="downloadGrades">Download grades (CSV)</button>
-        <button class="btn btn-outline" data-download="schedules" data-i18n="downloadSchedule">Download schedule (CSV)</button>
+      <h2 data-i18n="sampleDataTitle">Sample data</h2>
+      <p class="muted" data-i18n="sampleDataDesc">Preview sample CSV data in your browser, then download when ready.</p>
+      <div class="card sample-data-list">
+        <div class="sample-data-row">
+          <button class="btn btn-outline" data-preview="students" data-i18n="previewStudents">Preview students</button>
+          <button class="btn btn-outline" data-download="students" data-i18n="downloadStudents">Download students (CSV)</button>
+        </div>
+        <div class="sample-data-row">
+          <button class="btn btn-outline" data-preview="grades" data-i18n="previewGrades">Preview grades</button>
+          <button class="btn btn-outline" data-download="grades" data-i18n="downloadGrades">Download grades (CSV)</button>
+        </div>
+        <div class="sample-data-row">
+          <button class="btn btn-outline" data-preview="schedules" data-i18n="previewSchedules">Preview schedules</button>
+          <button class="btn btn-outline" data-download="schedules" data-i18n="downloadSchedules">Download schedule (CSV)</button>
+        </div>
+      </div>
+      <div data-sample-preview-wrap class="section-hidden sample-preview-wrap">
+        <h3 data-sample-preview-title></h3>
+        <p class="muted sample-preview-hint" data-i18n="samplePreviewHint">Click Preview to view a file below. Use Download to save it as CSV.</p>
+        <div data-sample-preview class="data-table-wrap"></div>
       </div>
     </div>
   </main>

@@ -67,8 +67,16 @@ const translations = {
     downloadTeachers: 'Download teachers (CSV)',
     downloadGrades: 'Download grades (CSV)',
     downloadSchedules: 'Download class schedules (CSV)',
-    sampleDataTitle: 'Sample data downloads',
-    sampleDataDesc: 'Download dummy data as CSV files. Use these for testing or as import templates.',
+    previewStudents: 'Preview students',
+    previewTeachers: 'Preview teachers',
+    previewGrades: 'Preview grades',
+    previewSchedules: 'Preview schedules',
+    sampleDataTitle: 'Sample data',
+    sampleDataDesc: 'Preview sample CSV data in your browser, then download when ready.',
+    samplePreviewHint: 'Click Preview to view a file below. Use Download to save it as CSV.',
+    loadingPreview: 'Loading preview…',
+    previewEmpty: 'No rows to display.',
+    previewFailed: 'Preview failed',
     filter: 'Filter',
     sortBy: 'Sort by',
     sortNameAsc: 'Name (A–Z)',
@@ -207,8 +215,16 @@ const translations = {
     downloadTeachers: 'تحميل المعلمين (CSV)',
     downloadGrades: 'تحميل الدرجات (CSV)',
     downloadSchedules: 'تحميل جداول الصفوف (CSV)',
-    sampleDataTitle: 'تحميل البيانات التجريبية',
-    sampleDataDesc: 'حمّل البيانات التجريبية كملفات CSV للاختبار أو كقوالب.',
+    previewStudents: 'معاينة الطلاب',
+    previewTeachers: 'معاينة المعلمين',
+    previewGrades: 'معاينة الدرجات',
+    previewSchedules: 'معاينة الجداول',
+    sampleDataTitle: 'البيانات التجريبية',
+    sampleDataDesc: 'اعرض ملفات CSV التجريبية في المتصفح، ثم حمّلها عند الحاجة.',
+    samplePreviewHint: 'اضغط معاينة لعرض الملف أدناه. استخدم تحميل لحفظه كملف CSV.',
+    loadingPreview: 'جاري تحميل المعاينة…',
+    previewEmpty: 'لا توجد صفوف للعرض.',
+    previewFailed: 'فشلت المعاينة',
     filter: 'تصفية',
     sortBy: 'ترتيب حسب',
     sortNameAsc: 'الاسم (أ–ي)',
@@ -361,4 +377,109 @@ function downloadCsv(url, filename) {
       a.click();
       URL.revokeObjectURL(a.href);
     });
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let current = '';
+  let inQuotes = false;
+
+  const normalized = text.replace(/^\uFEFF/, '');
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (normalized[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      row.push(current);
+      current = '';
+    } else if (char === '\n') {
+      row.push(current);
+      rows.push(row);
+      row = [];
+      current = '';
+    } else if (char !== '\r') {
+      current += char;
+    }
+  }
+
+  if (current.length || row.length) {
+    row.push(current);
+    rows.push(row);
+  }
+
+  return rows.filter(r => r.some(cell => cell !== ''));
+}
+
+async function previewSampleCsv(type, panelId) {
+  const panel = document.getElementById(panelId);
+  const previewWrap = panel?.querySelector('[data-sample-preview-wrap]');
+  const previewTable = panel?.querySelector('[data-sample-preview]');
+  const previewTitle = panel?.querySelector('[data-sample-preview-title]');
+  if (!panel || !previewWrap || !previewTable) return;
+
+  previewWrap.classList.remove('section-hidden');
+  previewTable.innerHTML = `<p class="muted">${t('loadingPreview')}</p>`;
+  if (previewTitle) {
+    const previewKey = {
+      students: 'previewStudents',
+      teachers: 'previewTeachers',
+      grades: 'previewGrades',
+      schedules: 'previewSchedules'
+    }[type];
+    previewTitle.textContent = previewKey ? t(previewKey) : type;
+  }
+
+  panel.querySelectorAll('[data-preview]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.preview === type);
+  });
+
+  try {
+    const res = await fetch((window.APP_CONFIG?.apiBase || '') + `/api/exports/${type}`, { credentials: 'include' });
+    if (!res.ok) throw new Error(t('previewFailed') || 'Preview failed');
+    const rows = parseCsv(await res.text());
+    if (!rows.length) {
+      previewTable.innerHTML = `<p class="muted">${t('previewEmpty')}</p>`;
+      return;
+    }
+
+    const [headers, ...dataRows] = rows;
+    previewTable.innerHTML = `
+      <table>
+        <thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${dataRows.map(cells => `<tr>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`;
+  } catch (err) {
+    previewTable.innerHTML = `<p class="muted">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function wireSampleDataPanel(panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+
+  panel.addEventListener('click', (e) => {
+    const previewBtn = e.target.closest('[data-preview]');
+    if (previewBtn && panel.contains(previewBtn)) {
+      previewSampleCsv(previewBtn.dataset.preview, panelId).catch(err => showToast(err.message, 'error'));
+      return;
+    }
+
+    const downloadBtn = e.target.closest('[data-download]');
+    if (downloadBtn && panel.contains(downloadBtn)) {
+      const type = downloadBtn.dataset.download;
+      downloadCsv(`/api/exports/${type}`, `${type}.csv`).catch(err => showToast(err.message, 'error'));
+    }
+  });
 }

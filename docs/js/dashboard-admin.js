@@ -273,12 +273,7 @@ async function loadLogs() {
 }
 
 function wireDownloads() {
-  document.querySelectorAll('[data-download]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.download;
-      downloadCsv(`/api/exports/${type}`, `${type}.csv`).catch(err => showToast(err.message, 'error'));
-    });
-  });
+  wireSampleDataPanel('panel-sample');
 }
 
 async function init() {

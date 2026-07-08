@@ -344,6 +344,37 @@ th {
   border-radius: 6px;
 }
 
+.sample-data-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.sample-data-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.sample-preview-wrap {
+  margin-top: 1.25rem;
+}
+
+.sample-preview-wrap h3 {
+  margin: 0 0 0.35rem;
+}
+
+.sample-preview-hint {
+  margin: 0 0 0.75rem;
+}
+
+.sample-data-row .btn.active {
+  border-color: var(--moe-gold);
+  color: var(--moe-gold-dark);
+  background: var(--moe-gold-light);
+}
+
 .image-view {
   max-width: 100%;
   border: 1px solid var(--border);
