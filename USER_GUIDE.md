@@ -211,15 +211,14 @@ https://school-portal-xxxx.onrender.com
 
 **This is your live website.** Share this link with users.
 
-### Step 4 — Find your admin password (online)
+### Step 4 — Admin login (online)
 
-Render may auto-generate `ADMIN_PASSWORD`. To find or change it:
+Default credentials on Render:
 
-1. In Render, open your **school-portal** web service.
-2. Go to **Environment** in the left sidebar.
-3. Look for:
-   - `ADMIN_EMAIL` — usually `admin@school.com`
-   - `ADMIN_PASSWORD` — click the eye icon to reveal it, or set a new value and **Save Changes** (this triggers a redeploy).
+- **Email:** `admin@school.com`
+- **Password:** `admin123`
+
+The admin password is synced from the `ADMIN_PASSWORD` environment variable on every server start. To use a custom password, set `ADMIN_PASSWORD` in Render → **Environment** and redeploy.
 
 Sign in at your Render URL with those credentials.
 
@@ -448,7 +447,7 @@ Use your **Render URL** only. That is the real live website.
 | `NODE_ENV` | Optional | `production` | Production mode |
 | `SESSION_SECRET` | Optional locally | Auto-generated on Render | Encrypts login sessions — keep secret |
 | `ADMIN_EMAIL` | Optional | `admin@school.com` | First admin email |
-| `ADMIN_PASSWORD` | Optional | Auto-generated or set by you | First admin password |
+| `ADMIN_PASSWORD` | Optional | `admin123` | Admin password (synced on each deploy) |
 | `ADMIN_NAME` | Optional | Optional | Admin display name |
 | `DATABASE_URL` | Not needed locally | **Required** | Neon PostgreSQL connection string |
 | `CORS_ORIGIN` | Not needed | Only for GitHub Pages split setup | Your github.io URL |
@@ -470,7 +469,8 @@ Run `npm install` again inside the project folder.
 ### Login fails online
 
 - Confirm `DATABASE_URL` is set in Render → Environment.
-- Check `ADMIN_PASSWORD` in Render → Environment (may differ from `admin123`).
+- Use `admin@school.com` / `admin123`, or whatever you set for `ADMIN_PASSWORD` in Render → Environment.
+- If login still fails, set `ADMIN_PASSWORD=admin123` in Render → Environment, save, and redeploy (password syncs on startup).
 - Wait 60 seconds if the app was idle (free tier cold start).
 
 ### Upload fails
