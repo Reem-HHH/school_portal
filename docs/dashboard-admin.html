@@ -53,6 +53,17 @@
         </div>
         <div style="align-self:end"><button type="submit" class="btn" data-i18n="createUserBtn">Create user</button></div>
       </form>
+      <div class="table-toolbar">
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="users-sort" class="input-field toolbar-select">
+          <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
+          <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
+          <option value="email-asc" data-i18n="sortEmailAsc">Email (A–Z)</option>
+          <option value="role-asc" data-i18n="sortRole">Role</option>
+          <option value="newest" data-i18n="sortNewest">Newest first</option>
+          <option value="oldest" data-i18n="sortOldest">Oldest first</option>
+        </select>
+      </div>
       <div class="data-table-wrap" style="margin-top:1rem">
         <table>
           <thead><tr>
@@ -74,10 +85,16 @@
 
     <div id="panel-students" class="tab-panel section-hidden">
       <h2 data-i18n="studentDirectory">Student directory</h2>
-      <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
-        <select id="filter-grade" class="input-field" style="width:auto"><option value="" data-i18n="allGrades">All grades</option></select>
-        <select id="filter-section" class="input-field" style="width:auto"><option value="" data-i18n="allSections">All sections</option></select>
-        <button id="filter-students-btn" class="btn btn-outline" data-i18n="filter">Filter</button>
+      <div class="table-toolbar">
+        <select id="filter-grade" class="input-field toolbar-select"><option value="" data-i18n="allGrades">All grades</option></select>
+        <select id="filter-section" class="input-field toolbar-select"><option value="" data-i18n="allSections">All sections</option></select>
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="students-sort" class="input-field toolbar-select">
+          <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
+          <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
+          <option value="grade-asc" data-i18n="sortGrade">Grade</option>
+          <option value="section-asc" data-i18n="sortSection">Section</option>
+        </select>
       </div>
       <form id="create-student-form" class="card form-grid form-grid-3" style="margin-bottom:1rem">
         <div class="form-row"><label data-i18n="name">Full name</label><input id="stu-name" required></div>
@@ -101,11 +118,18 @@
 
     <div id="panel-gradebook" class="tab-panel section-hidden">
       <h2 data-i18n="masterGradebook">Master gradebook</h2>
-      <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
-        <select id="gb-grade" class="input-field" style="width:auto"><option value="" data-i18n="allGrades">All grades</option></select>
-        <select id="gb-section" class="input-field" style="width:auto"><option value="" data-i18n="allSections">All sections</option></select>
-        <input id="gb-subject" class="input-field" data-i18n-placeholder="subjectFilter" placeholder="Subject filter" style="width:auto">
-        <button id="gb-filter-btn" class="btn btn-outline" data-i18n="apply">Apply</button>
+      <div class="table-toolbar">
+        <select id="gb-grade" class="input-field toolbar-select"><option value="" data-i18n="allGrades">All grades</option></select>
+        <select id="gb-section" class="input-field toolbar-select"><option value="" data-i18n="allSections">All sections</option></select>
+        <input id="gb-subject" class="input-field toolbar-input" data-i18n-placeholder="subjectFilter" placeholder="Subject filter">
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="gradebook-sort" class="input-field toolbar-select">
+          <option value="student-asc" data-i18n="sortStudent">Student (A–Z)</option>
+          <option value="score-desc" data-i18n="sortScoreHigh">Score (high to low)</option>
+          <option value="score-asc" data-i18n="sortScoreLow">Score (low to high)</option>
+          <option value="subject-asc" data-i18n="sortSubject">Subject</option>
+          <option value="grade-asc" data-i18n="sortGrade">Grade</option>
+        </select>
       </div>
       <div class="data-table-wrap">
         <table>
@@ -152,6 +176,15 @@
     </div>
 
     <div id="panel-logs" class="tab-panel section-hidden">
+      <div class="table-toolbar">
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="logs-sort" class="input-field toolbar-select">
+          <option value="time-desc" data-i18n="sortTimeNewest">Time (newest)</option>
+          <option value="time-asc" data-i18n="sortTimeOldest">Time (oldest)</option>
+          <option value="user-asc" data-i18n="sortUser">User (A–Z)</option>
+          <option value="action-asc" data-i18n="sortAction">Action</option>
+        </select>
+      </div>
       <div class="data-table-wrap">
         <table>
           <thead><tr>

@@ -1,9 +1,55 @@
 let currentUser = null;
+let usersCache = [];
+let studentsCache = [];
+let gradebookCache = [];
+let logsCache = [];
 
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('section-hidden'));
   document.getElementById(`panel-${name}`).classList.remove('section-hidden');
+}
+
+function localeCompare(a, b) {
+  return String(a ?? '').localeCompare(String(b ?? ''), undefined, { sensitivity: 'base' });
+}
+
+function sortItems(items, sortKey, getters) {
+  const getter = getters[sortKey] || getters[Object.keys(getters)[0]];
+  const desc = sortKey.endsWith('-desc');
+  const asc = sortKey.endsWith('-asc');
+  return [...items].sort((a, b) => {
+    const av = getter(a);
+    const bv = getter(b);
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return desc ? bv - av : av - bv;
+    }
+    const cmp = localeCompare(av, bv);
+    if (sortKey === 'newest' || sortKey === 'time-desc') return localeCompare(bv, av);
+    if (sortKey === 'oldest' || sortKey === 'time-asc') return localeCompare(av, bv);
+    return desc ? -cmp : asc ? cmp : cmp;
+  });
+}
+
+function wireSortSelect(id, renderFn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('change', renderFn);
+}
+
+function wireAutoApply(ids, applyFn) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', applyFn);
+    if (el.tagName === 'INPUT') {
+      let timer;
+      el.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(applyFn, 300);
+      });
+    }
+  });
 }
 
 async function uploadContent(form, contentType) {
@@ -32,8 +78,17 @@ async function loadUploadsList() {
   });
 }
 
-async function loadUsers() {
-  const { users } = await API.get('/api/auth/users');
+function renderUsers() {
+  const sortKey = document.getElementById('users-sort')?.value || 'name-asc';
+  const users = sortItems(usersCache, sortKey, {
+    'name-asc': u => u.full_name,
+    'name-desc': u => u.full_name,
+    'email-asc': u => u.email,
+    'role-asc': u => u.role,
+    newest: u => u.created_at,
+    oldest: u => u.created_at
+  });
+
   document.getElementById('users-table').innerHTML = users.map(u => `
     <tr>
       <td>${escapeHtml(u.full_name)}</td>
@@ -66,6 +121,12 @@ async function loadUsers() {
   });
 }
 
+async function loadUsers() {
+  const { users } = await API.get('/api/auth/users');
+  usersCache = users;
+  renderUsers();
+}
+
 async function loadTeachers() {
   const { teachers } = await API.get('/api/teachers');
   document.getElementById('teachers-list').innerHTML = teachers.map(teacher => `
@@ -75,14 +136,15 @@ async function loadTeachers() {
     </div>`).join('') || `<p class="muted">${t('noTeachers')}</p>`;
 }
 
-async function loadStudents(grade = '', section = '') {
-  let url = '/api/students';
-  const params = new URLSearchParams();
-  if (grade) params.set('grade', grade);
-  if (section) params.set('section', section);
-  if (params.toString()) url += '?' + params.toString();
+function renderStudents() {
+  const sortKey = document.getElementById('students-sort')?.value || 'name-asc';
+  const students = sortItems(studentsCache, sortKey, {
+    'name-asc': s => s.name,
+    'name-desc': s => s.name,
+    'grade-asc': s => s.grade,
+    'section-asc': s => s.section
+  });
 
-  const { students } = await API.get(url);
   document.getElementById('students-table').innerHTML = students.map(s => `
     <tr>
       <td>${escapeHtml(s.name)}</td>
@@ -93,16 +155,30 @@ async function loadStudents(grade = '', section = '') {
     </tr>`).join('') || `<tr><td colspan="5" class="muted">${t('noStudents')}</td></tr>`;
 }
 
-async function loadMasterGradebook() {
-  const grade = document.getElementById('gb-grade').value;
-  const section = document.getElementById('gb-section').value;
-  const subject = document.getElementById('gb-subject').value;
+async function loadStudents() {
+  let url = '/api/students';
+  const grade = document.getElementById('filter-grade')?.value || '';
+  const section = document.getElementById('filter-section')?.value || '';
   const params = new URLSearchParams();
   if (grade) params.set('grade', grade);
   if (section) params.set('section', section);
-  if (subject) params.set('subject', subject);
+  if (params.toString()) url += '?' + params.toString();
 
-  const { grades } = await API.get('/api/gradebook?' + params.toString());
+  const { students } = await API.get(url);
+  studentsCache = students;
+  renderStudents();
+}
+
+function renderMasterGradebook() {
+  const sortKey = document.getElementById('gradebook-sort')?.value || 'student-asc';
+  const grades = sortItems(gradebookCache, sortKey, {
+    'student-asc': g => g.student_name,
+    'score-desc': g => Number(g.score),
+    'score-asc': g => Number(g.score),
+    'subject-asc': g => g.subject,
+    'grade-asc': g => `${g.grade_level} ${g.section}`
+  });
+
   document.getElementById('gradebook-table').innerHTML = grades.map(g => `
     <tr>
       <td>${escapeHtml(g.student_name)}</td>
@@ -114,20 +190,52 @@ async function loadMasterGradebook() {
     </tr>`).join('') || `<tr><td colspan="6" class="muted">${t('noGrades')}</td></tr>`;
 }
 
+async function loadMasterGradebook() {
+  const grade = document.getElementById('gb-grade')?.value || '';
+  const section = document.getElementById('gb-section')?.value || '';
+  const subject = document.getElementById('gb-subject')?.value.trim() || '';
+  const params = new URLSearchParams();
+  if (grade) params.set('grade', grade);
+  if (section) params.set('section', section);
+  if (subject) params.set('subject', subject);
+
+  const { grades } = await API.get('/api/gradebook?' + params.toString());
+  gradebookCache = grades;
+  renderMasterGradebook();
+}
+
 async function loadFilters() {
+  const gradeVal = document.getElementById('filter-grade')?.value || '';
+  const sectionVal = document.getElementById('filter-section')?.value || '';
+  const gbGradeVal = document.getElementById('gb-grade')?.value || '';
+  const gbSectionVal = document.getElementById('gb-section')?.value || '';
+
   const { grades, sections } = await API.get('/api/students/filters');
   ['filter-grade', 'gb-grade'].forEach(id => {
     const el = document.getElementById(id);
-    el.innerHTML = `<option value="">${t('allGrades')}</option>` + grades.map(g => `<option>${g}</option>`).join('');
+    const saved = id === 'filter-grade' ? gradeVal : gbGradeVal;
+    el.innerHTML = `<option value="">${t('allGrades')}</option>` + grades.map(g =>
+      `<option${g === saved ? ' selected' : ''}>${g}</option>`
+    ).join('');
   });
   ['filter-section', 'gb-section'].forEach(id => {
     const el = document.getElementById(id);
-    el.innerHTML = `<option value="">${t('allSections')}</option>` + sections.map(s => `<option>${s}</option>`).join('');
+    const saved = id === 'filter-section' ? sectionVal : gbSectionVal;
+    el.innerHTML = `<option value="">${t('allSections')}</option>` + sections.map(s =>
+      `<option${s === saved ? ' selected' : ''}>${s}</option>`
+    ).join('');
   });
 }
 
-async function loadLogs() {
-  const { logs } = await API.get('/api/audit?limit=100');
+function renderLogs() {
+  const sortKey = document.getElementById('logs-sort')?.value || 'time-desc';
+  const logs = sortItems(logsCache, sortKey, {
+    'time-desc': l => l.created_at,
+    'time-asc': l => l.created_at,
+    'user-asc': l => l.user_name || l.user_email,
+    'action-asc': l => l.action
+  });
+
   document.getElementById('logs-table').innerHTML = logs.map(log => `
     <tr>
       <td class="muted">${formatDate(log.created_at)}</td>
@@ -135,6 +243,12 @@ async function loadLogs() {
       <td><code>${log.action}</code></td>
       <td class="log-details">${escapeHtml(JSON.stringify(log.details))}</td>
     </tr>`).join('');
+}
+
+async function loadLogs() {
+  const { logs } = await API.get('/api/audit?limit=100');
+  logsCache = logs;
+  renderLogs();
 }
 
 function wireDownloads() {
@@ -154,10 +268,11 @@ async function init() {
 
   onLanguageChange(() => {
     loadFilters();
-    loadUsers();
+    renderUsers();
     if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachers();
-    if (!document.getElementById('panel-students').classList.contains('section-hidden')) loadStudents();
-    if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) loadMasterGradebook();
+    if (!document.getElementById('panel-students').classList.contains('section-hidden')) renderStudents();
+    if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) renderMasterGradebook();
+    if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
     loadUploadsList();
   });
 
@@ -170,6 +285,14 @@ async function init() {
       if (tab.dataset.tab === 'logs') loadLogs();
     });
   });
+
+  wireSortSelect('users-sort', renderUsers);
+  wireSortSelect('students-sort', renderStudents);
+  wireSortSelect('gradebook-sort', renderMasterGradebook);
+  wireSortSelect('logs-sort', renderLogs);
+
+  wireAutoApply(['filter-grade', 'filter-section'], loadStudents);
+  wireAutoApply(['gb-grade', 'gb-section', 'gb-subject'], loadMasterGradebook);
 
   document.getElementById('create-user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -199,12 +322,6 @@ async function init() {
       loadStudents();
     } catch (err) { showToast(err.message, 'error'); }
   });
-
-  document.getElementById('filter-students-btn').addEventListener('click', () => {
-    loadStudents(document.getElementById('filter-grade').value, document.getElementById('filter-section').value);
-  });
-
-  document.getElementById('gb-filter-btn').addEventListener('click', loadMasterGradebook);
 
   document.getElementById('schedule-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();

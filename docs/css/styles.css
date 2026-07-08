@@ -482,6 +482,34 @@ html[dir="rtl"] .toast {
 .upload-list button:hover { color: var(--moe-gold-dark); }
 .upload-list button.active { font-weight: 600; color: var(--moe-gold-dark); }
 
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.toolbar-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--moe-iron);
+  margin: 0;
+}
+
+.toolbar-select,
+.toolbar-input {
+  width: auto;
+  min-width: 9rem;
+  max-width: 100%;
+}
+
+.toolbar-input { min-width: 10rem; }
+
+html[dir="rtl"] .table-toolbar {
+  flex-direction: row-reverse;
+}
+
 /* Auth page school name heading */
 .auth-brand h1 {
   font-family: var(--font-heading);
