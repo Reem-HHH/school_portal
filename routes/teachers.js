@@ -4,6 +4,47 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+const DEFAULT_SUBJECTS = ['Arabic', 'English', 'Math', 'Science', 'Islamic Studies'];
+
+router.get('/subjects', requireAuth, requireRole('admin'), async (_req, res) => {
+  try {
+    const rows = await db.all(`
+      SELECT DISTINCT subject FROM (
+        SELECT subject FROM teacher_assignments
+        UNION
+        SELECT subject FROM schedule_entries WHERE subject IS NOT NULL AND subject != ''
+      ) AS combined ORDER BY subject
+    `);
+    const subjects = [...new Set([...DEFAULT_SUBJECTS, ...rows.map(r => r.subject)])].sort();
+    res.json({ subjects });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/assignments', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const { grade, section, subject, teacherId } = req.query;
+    let sql = `
+      SELECT ta.id, ta.subject, ta.grade, ta.section, ta.teacher_id,
+             u.full_name as teacher_name, u.email as teacher_email
+      FROM teacher_assignments ta
+      JOIN users u ON u.id = ta.teacher_id
+      WHERE u.role = 'teacher'
+    `;
+    const params = [];
+    if (grade) { sql += ' AND ta.grade = ?'; params.push(grade); }
+    if (section) { sql += ' AND ta.section = ?'; params.push(section); }
+    if (subject) { sql += ' AND ta.subject = ?'; params.push(subject); }
+    if (teacherId) { sql += ' AND ta.teacher_id = ?'; params.push(teacherId); }
+    sql += ' ORDER BY ta.grade, ta.section, ta.subject, u.full_name';
+    const assignments = await db.all(sql, params);
+    res.json({ assignments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/', requireAuth, requireRole('admin'), async (_req, res) => {
   try {
     const teachers = await db.all(`

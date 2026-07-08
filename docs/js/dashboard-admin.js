@@ -2,6 +2,8 @@ let currentUser = null;
 let usersCache = [];
 let studentsCache = [];
 let teachersCache = [];
+let assignmentsCache = [];
+let teacherSubjectsCache = [];
 let logsCache = [];
 let adminActiveAssessmentId = null;
 
@@ -127,66 +129,99 @@ async function loadUsers() {
   }
 }
 
-async function loadTeachers() {
-  const { teachers } = await API.get('/api/teachers');
-  teachersCache = teachers;
+async function loadTeacherTabFilters() {
   const { grades, sections } = await API.get('/api/students/filters');
+  const { subjects } = await API.get('/api/teachers/subjects');
+  teacherSubjectsCache = subjects;
 
-  document.getElementById('teachers-list').innerHTML = teachers.map(teacher => `
-    <div class="card mb-1 teacher-card">
-      <strong>${escapeHtml(teacher.full_name)}</strong> · ${escapeHtml(teacher.email)}
-      <ul class="assignment-list mt-1">
-        ${(teacher.assignments || []).map(a => `
-          <li>
-            ${escapeHtml(a.subject)} — ${escapeHtml(a.grade)} ${escapeHtml(a.section)}
-            <button class="btn btn-danger btn-inline" data-rm-assignment="${a.id}" data-teacher-id="${teacher.id}">${t('delete')}</button>
-          </li>`).join('') || `<li class="muted">${t('noClasses')}</li>`}
-      </ul>
-      <form class="form-grid form-grid-3 mt-1" data-assign-teacher="${teacher.id}">
-        <div class="form-row">
-          <label data-i18n="subject">Subject</label>
-          <input name="subject" required placeholder="Math">
-        </div>
-        <div class="form-row">
-          <label data-i18n="grade">Grade</label>
-          <select name="grade" required>${grades.map(g => `<option>${escapeHtml(g)}</option>`).join('')}</select>
-        </div>
-        <div class="form-row">
-          <label data-i18n="section">Section</label>
-          <select name="section" required>${sections.map(s => `<option>${escapeHtml(s)}</option>`).join('')}</select>
-        </div>
-        <div class="align-end">
-          <button type="submit" class="btn btn-outline" data-i18n="assignClass">Assign class</button>
-        </div>
-      </form>
-    </div>`).join('') || `<p class="muted">${t('noTeachers')}</p>`;
+  const savedGrade = document.getElementById('ta-filter-grade')?.value || '';
+  const savedSection = document.getElementById('ta-filter-section')?.value || '';
+  const savedSubject = document.getElementById('ta-filter-subject')?.value || '';
+  const savedTeacher = document.getElementById('ta-filter-teacher')?.value || '';
 
-  document.querySelectorAll('[data-assign-teacher]').forEach(form => {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData(form);
-      try {
-        await API.post(`/api/teachers/${form.dataset.assignTeacher}/assignments`, {
-          subject: fd.get('subject'),
-          grade: fd.get('grade'),
-          section: fd.get('section')
-        });
-        showToast(t('updated'));
-        loadTeachers();
-      } catch (err) { showToast(err.message, 'error'); }
-    });
-  });
+  const gradeOpts = grades.map(g => `<option value="${escapeHtml(g)}"${g === savedGrade ? ' selected' : ''}>${escapeHtml(g)}</option>`).join('');
+  const sectionOpts = sections.map(s => `<option value="${escapeHtml(s)}"${s === savedSection ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('');
+  const subjectOpts = subjects.map(s => `<option value="${escapeHtml(s)}"${s === savedSubject ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('');
 
-  document.querySelectorAll('[data-rm-assignment]').forEach(btn => {
+  document.getElementById('assign-grade').innerHTML = `<option value="">${t('selectGrade')}</option>` + gradeOpts;
+  document.getElementById('assign-section').innerHTML = `<option value="">${t('selectSection')}</option>` + sectionOpts;
+  document.getElementById('assign-subject').innerHTML = `<option value="">${t('selectSubject')}</option>` + subjectOpts;
+
+  document.getElementById('ta-filter-grade').innerHTML = `<option value="">${t('allGrades')}</option>` + gradeOpts;
+  document.getElementById('ta-filter-section').innerHTML = `<option value="">${t('allSections')}</option>` + sectionOpts;
+  document.getElementById('ta-filter-subject').innerHTML = `<option value="">${t('allSubjects')}</option>` + subjectOpts;
+
+  const teacherOpts = teachersCache.map(te =>
+    `<option value="${te.id}"${String(te.id) === savedTeacher ? ' selected' : ''}>${escapeHtml(te.full_name)}</option>`
+  ).join('');
+  document.getElementById('assign-teacher').innerHTML = `<option value="">${t('selectTeacher')}</option>` + teacherOpts;
+  document.getElementById('ta-filter-teacher').innerHTML = `<option value="">${t('allTeachers')}</option>` + teacherOpts;
+}
+
+function renderTeacherRoster() {
+  document.getElementById('teachers-roster').innerHTML = teachersCache.map(teacher => {
+    const count = (teacher.assignments || []).length;
+    const preview = (teacher.assignments || []).slice(0, 4).map(a =>
+      `${a.subject} (${a.grade} ${a.section})`
+    ).join(' · ');
+    return `<div class="teacher-roster-row">
+      <strong>${escapeHtml(teacher.full_name)}</strong>
+      <span class="muted">${escapeHtml(teacher.email)}</span>
+      <span class="assignment-count">${count} ${t('classesAssigned')}</span>
+      ${preview ? `<p class="muted roster-preview">${escapeHtml(preview)}${count > 4 ? '…' : ''}</p>` : ''}
+    </div>`;
+  }).join('') || `<p class="muted">${t('noTeachers')}</p>`;
+}
+
+function renderAssignmentsTable() {
+  const tbody = document.getElementById('assignments-table');
+  if (!assignmentsCache.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-prompt">${t('noAssignmentsYet')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = assignmentsCache.map(a => `
+    <tr>
+      <td>${escapeHtml(a.teacher_name)}</td>
+      <td>${escapeHtml(a.subject)}</td>
+      <td>${escapeHtml(a.grade)}</td>
+      <td>${escapeHtml(a.section)}</td>
+      <td><button class="btn btn-danger btn-inline" data-rm-assignment="${a.id}" data-teacher-id="${a.teacher_id}">${t('remove')}</button></td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('[data-rm-assignment]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm(t('delete') + '?')) return;
+      if (!confirm(t('removeAssignmentConfirm'))) return;
       try {
         await API.delete(`/api/teachers/${btn.dataset.teacherId}/assignments/${btn.dataset.rmAssignment}`);
         showToast(t('updated'));
-        loadTeachers();
+        await loadTeachersTab();
       } catch (err) { showToast(err.message, 'error'); }
     });
   });
+}
+
+async function loadAssignmentsList() {
+  const params = new URLSearchParams();
+  const teacherId = document.getElementById('ta-filter-teacher')?.value;
+  const grade = document.getElementById('ta-filter-grade')?.value;
+  const section = document.getElementById('ta-filter-section')?.value;
+  const subject = document.getElementById('ta-filter-subject')?.value;
+  if (teacherId) params.set('teacherId', teacherId);
+  if (grade) params.set('grade', grade);
+  if (section) params.set('section', section);
+  if (subject) params.set('subject', subject);
+
+  const { assignments } = await API.get('/api/teachers/assignments?' + params.toString());
+  assignmentsCache = assignments;
+  renderAssignmentsTable();
+}
+
+async function loadTeachersTab() {
+  const { teachers } = await API.get('/api/teachers');
+  teachersCache = teachers;
+  await loadTeacherTabFilters();
+  renderTeacherRoster();
+  await loadAssignmentsList();
 }
 
 function clearStudentsTable() {
@@ -441,7 +476,7 @@ async function init() {
   onLanguageChange(() => {
     loadFilters();
     renderUsers();
-    if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachers();
+    if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachersTab();
     if (!document.getElementById('panel-students').classList.contains('section-hidden')) {
       if (studentFiltersReady()) renderStudents();
       else clearStudentsTable();
@@ -460,7 +495,7 @@ async function init() {
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       showTab(tab.dataset.tab);
-      if (tab.dataset.tab === 'teachers') loadTeachers();
+      if (tab.dataset.tab === 'teachers') loadTeachersTab();
       if (tab.dataset.tab === 'students') loadStudents();
       if (tab.dataset.tab === 'gradebook') {
         showAdminGradebookOverview();
@@ -494,6 +529,25 @@ async function init() {
   document.getElementById('admin-back-gradebook').addEventListener('click', () => {
     showAdminGradebookOverview();
     loadMasterGradebook();
+  });
+
+  wireAutoApply(['ta-filter-teacher', 'ta-filter-grade', 'ta-filter-section', 'ta-filter-subject'], loadAssignmentsList);
+
+  document.getElementById('assign-teacher-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const teacherId = document.getElementById('assign-teacher').value;
+    const subject = document.getElementById('assign-subject').value;
+    const grade = document.getElementById('assign-grade').value;
+    const section = document.getElementById('assign-section').value;
+    try {
+      await API.post(`/api/teachers/${teacherId}/assignments`, { subject, grade, section });
+      showToast(t('assignmentAdded'));
+      document.getElementById('ta-filter-teacher').value = teacherId;
+      document.getElementById('ta-filter-grade').value = grade;
+      document.getElementById('ta-filter-section').value = section;
+      document.getElementById('ta-filter-subject').value = subject;
+      await loadTeachersTab();
+    } catch (err) { showToast(err.message, 'error'); }
   });
 
   document.getElementById('create-user-form').addEventListener('submit', async (e) => {

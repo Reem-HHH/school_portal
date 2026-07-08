@@ -78,8 +78,71 @@
     </div>
 
     <div id="panel-teachers" class="tab-panel section-hidden">
-      <h2 data-i18n="teacherDirectory">Teacher directory</h2>
-      <div id="teachers-list"></div>
+      <h2 data-i18n="teacherAssignments">Teacher assignments</h2>
+      <p class="muted mb-1" data-i18n="teacherAssignmentsDesc">Assign teachers to classes by subject, grade, and section.</p>
+
+      <form id="assign-teacher-form" class="card form-grid form-grid-3 mb-1">
+        <div class="form-row">
+          <label data-i18n="teacher">Teacher</label>
+          <select id="assign-teacher" required>
+            <option value="" data-i18n="selectTeacher">Select teacher</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="subject">Subject</label>
+          <select id="assign-subject" required>
+            <option value="" data-i18n="selectSubject">Select subject</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="grade">Grade</label>
+          <select id="assign-grade" required>
+            <option value="" data-i18n="selectGrade">Select grade</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="section">Section</label>
+          <select id="assign-section" required>
+            <option value="" data-i18n="selectSection">Select section</option>
+          </select>
+        </div>
+        <div class="form-row align-end span-full">
+          <button type="submit" class="btn" data-i18n="assignClass">Assign class</button>
+        </div>
+      </form>
+
+      <div class="table-toolbar">
+        <select id="ta-filter-teacher" class="input-field toolbar-select">
+          <option value="" data-i18n="allTeachers">All teachers</option>
+        </select>
+        <select id="ta-filter-grade" class="input-field toolbar-select">
+          <option value="" data-i18n="allGrades">All grades</option>
+        </select>
+        <select id="ta-filter-section" class="input-field toolbar-select">
+          <option value="" data-i18n="allSections">All sections</option>
+        </select>
+        <select id="ta-filter-subject" class="input-field toolbar-select">
+          <option value="" data-i18n="allSubjects">All subjects</option>
+        </select>
+      </div>
+
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr>
+            <th data-i18n="teacher">Teacher</th>
+            <th data-i18n="subject">Subject</th>
+            <th data-i18n="grade">Grade</th>
+            <th data-i18n="section">Section</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="assignments-table"></tbody>
+        </table>
+      </div>
+
+      <details class="card mt-1 teacher-roster-details">
+        <summary data-i18n="teacherRoster">Teacher roster</summary>
+        <div id="teachers-roster" class="teacher-roster mt-1"></div>
+      </details>
     </div>
 
     <div id="panel-students" class="tab-panel section-hidden">
