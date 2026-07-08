@@ -10,41 +10,48 @@
 <body>
   <header class="header">
     <div class="header-inner">
-      <a href="dashboard-student.html" class="logo" id="portal-title">Student Portal</a>
+      <a href="dashboard-student.html" class="logo" id="portal-title" data-i18n="studentPortal">Student Portal</a>
       <nav class="nav">
         <span id="user-label" class="muted"></span>
-        <button id="logout-btn">Logout</button>
+        <button id="lang-toggle" class="btn btn-outline">AR</button>
+        <button id="logout-btn" data-i18n="logout">Logout</button>
       </nav>
     </div>
   </header>
 
   <main class="layout">
     <div id="parent-picker" class="card section-hidden" style="margin-bottom:1rem">
-      <label>Viewing child</label>
+      <label data-i18n="viewingChild">Viewing child</label>
       <select id="child-select"></select>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="profile">Profile</button>
-      <button class="tab" data-tab="schedule">Timetable</button>
-      <button class="tab" data-tab="grades">My Grades</button>
+      <button class="tab active" data-tab="profile" data-i18n="tabProfile">Profile</button>
+      <button class="tab" data-tab="schedule" data-i18n="tabTimetable">Timetable</button>
+      <button class="tab" data-tab="grades" data-i18n="tabMyGrades">My Grades</button>
     </div>
 
     <div id="panel-profile" class="tab-panel">
-      <h2>Personal information</h2>
+      <h2 data-i18n="personalInfo">Personal information</h2>
       <div id="profile-card" class="card"></div>
     </div>
 
     <div id="panel-schedule" class="tab-panel section-hidden">
-      <h2>Timetable</h2>
+      <h2 data-i18n="tabTimetable">Timetable</h2>
       <div id="schedule-view" class="data-table-wrap"></div>
     </div>
 
     <div id="panel-grades" class="tab-panel section-hidden">
-      <h2>Formative grades</h2>
+      <h2 data-i18n="formativeGrades">Formative grades</h2>
       <div class="data-table-wrap">
         <table>
-          <thead><tr><th>Subject</th><th>Type</th><th>Assessment</th><th>Score</th><th>Teacher</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="subject">Subject</th>
+            <th data-i18n="type">Type</th>
+            <th data-i18n="assessment">Assessment</th>
+            <th data-i18n="score">Score</th>
+            <th data-i18n="teacher">Teacher</th>
+          </tr></thead>
           <tbody id="grades-table"></tbody>
         </table>
       </div>
@@ -53,6 +60,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/dashboard-student.js"></script>
 </body>
 </html>

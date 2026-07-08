@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
-const { RBAC_SCHEMA, RBAC_SCHEMA_SQLITE, seedRbacData } = require('./rbac-schema');
+const { RBAC_SCHEMA, RBAC_SCHEMA_SQLITE } = require('./rbac-schema');
+const { seedDummyData } = require('./dummy-data');
 
 const usePg = !!process.env.DATABASE_URL;
 let pool = null;
@@ -145,7 +146,7 @@ async function initDb() {
   }
 
   await seedAdmin();
-  await seedRbacData({ get, all, run }, usePg);
+  await seedDummyData({ get, all, run }, usePg);
 }
 
 async function seedAdmin() {

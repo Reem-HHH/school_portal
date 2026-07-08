@@ -10,33 +10,34 @@
 <body>
   <header class="header">
     <div class="header-inner">
-      <a href="dashboard-admin.html" class="logo">Admin Dashboard</a>
+      <a href="dashboard-admin.html" class="logo" data-i18n="adminDashboard">Admin Dashboard</a>
       <nav class="nav">
         <span id="user-label" class="muted"></span>
-        <button id="logout-btn">Logout</button>
+        <button id="lang-toggle" class="btn btn-outline">AR</button>
+        <button id="logout-btn" data-i18n="logout">Logout</button>
       </nav>
     </div>
   </header>
 
   <main class="layout">
     <div class="tabs">
-      <button class="tab active" data-tab="users">Users</button>
-      <button class="tab" data-tab="teachers">Teachers</button>
-      <button class="tab" data-tab="students">Students</button>
-      <button class="tab" data-tab="gradebook">Master Gradebook</button>
-      <button class="tab" data-tab="uploads">Uploads</button>
-      <button class="tab" data-tab="logs">Activity Log</button>
+      <button class="tab active" data-tab="users" data-i18n="tabUsers">Users</button>
+      <button class="tab" data-tab="teachers" data-i18n="tabTeachers">Teachers</button>
+      <button class="tab" data-tab="students" data-i18n="tabStudents">Students</button>
+      <button class="tab" data-tab="gradebook" data-i18n="tabMasterGradebook">Master Gradebook</button>
+      <button class="tab" data-tab="sample" data-i18n="tabSampleData">Sample Data</button>
+      <button class="tab" data-tab="uploads" data-i18n="tabUploads">Uploads</button>
+      <button class="tab" data-tab="logs" data-i18n="tabLogs">Activity Log</button>
     </div>
 
-    <!-- Users -->
     <div id="panel-users" class="tab-panel">
-      <h2>Create user</h2>
+      <h2 data-i18n="createUser">Create user</h2>
       <form id="create-user-form" class="card form-grid form-grid-3">
-        <div class="form-row"><label>Name</label><input id="new-name" required></div>
-        <div class="form-row"><label>Email</label><input id="new-email" type="email" required></div>
-        <div class="form-row"><label>Password</label><input id="new-password" type="password" required minlength="6"></div>
+        <div class="form-row"><label data-i18n="name">Full name</label><input id="new-name" required></div>
+        <div class="form-row"><label data-i18n="email">Email</label><input id="new-email" type="email" required></div>
+        <div class="form-row"><label data-i18n="password">Password</label><input id="new-password" type="password" required minlength="6"></div>
         <div class="form-row">
-          <label>Role</label>
+          <label data-i18n="role">Role</label>
           <select id="new-role">
             <option value="admin">Admin</option>
             <option value="teacher">Teacher</option>
@@ -44,85 +45,115 @@
             <option value="student">Student</option>
           </select>
         </div>
-        <div style="align-self:end"><button type="submit" class="btn">Create user</button></div>
+        <div style="align-self:end"><button type="submit" class="btn" data-i18n="createUserBtn">Create user</button></div>
       </form>
       <div class="data-table-wrap" style="margin-top:1rem">
         <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <thead><tr>
+            <th data-i18n="name">Full name</th>
+            <th data-i18n="email">Email</th>
+            <th data-i18n="role">Role</th>
+            <th data-i18n="status">Status</th>
+            <th></th>
+          </tr></thead>
           <tbody id="users-table"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Teachers -->
     <div id="panel-teachers" class="tab-panel section-hidden">
-      <h2>Teacher directory</h2>
+      <h2 data-i18n="teacherDirectory">Teacher directory</h2>
       <div id="teachers-list" class="card"></div>
     </div>
 
-    <!-- Students -->
     <div id="panel-students" class="tab-panel section-hidden">
-      <h2>Student directory</h2>
+      <h2 data-i18n="studentDirectory">Student directory</h2>
       <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
-        <select id="filter-grade" class="input-field" style="width:auto"><option value="">All grades</option></select>
-        <select id="filter-section" class="input-field" style="width:auto"><option value="">All sections</option></select>
-        <button id="filter-students-btn" class="btn btn-outline">Filter</button>
+        <select id="filter-grade" class="input-field" style="width:auto"><option value="" data-i18n="allGrades">All grades</option></select>
+        <select id="filter-section" class="input-field" style="width:auto"><option value="" data-i18n="allSections">All sections</option></select>
+        <button id="filter-students-btn" class="btn btn-outline" data-i18n="filter">Filter</button>
       </div>
       <form id="create-student-form" class="card form-grid form-grid-3" style="margin-bottom:1rem">
-        <div class="form-row"><label>Name</label><input id="stu-name" required></div>
-        <div class="form-row"><label>Grade</label><input id="stu-grade" placeholder="Grade 5" required></div>
-        <div class="form-row"><label>Section</label><input id="stu-section" placeholder="Section A" required></div>
-        <div style="align-self:end"><button type="submit" class="btn">Add student</button></div>
+        <div class="form-row"><label data-i18n="name">Full name</label><input id="stu-name" required></div>
+        <div class="form-row"><label data-i18n="grade">Grade</label><input id="stu-grade" placeholder="Grade 5" required></div>
+        <div class="form-row"><label data-i18n="section">Section</label><input id="stu-section" placeholder="Section A" required></div>
+        <div style="align-self:end"><button type="submit" class="btn" data-i18n="addStudent">Add student</button></div>
       </form>
       <div class="data-table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Grade</th><th>Section</th><th>Parent</th><th>Linked user</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="name">Full name</th>
+            <th data-i18n="grade">Grade</th>
+            <th data-i18n="section">Section</th>
+            <th data-i18n="parent">Parent</th>
+            <th data-i18n="linkedUser">Linked user</th>
+          </tr></thead>
           <tbody id="students-table"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Master Gradebook -->
     <div id="panel-gradebook" class="tab-panel section-hidden">
-      <h2>Master gradebook</h2>
+      <h2 data-i18n="masterGradebook">Master gradebook</h2>
       <div class="flex gap" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
-        <select id="gb-grade" class="input-field" style="width:auto"><option value="">All grades</option></select>
-        <select id="gb-section" class="input-field" style="width:auto"><option value="">All sections</option></select>
-        <input id="gb-subject" class="input-field" placeholder="Subject filter" style="width:auto">
-        <button id="gb-filter-btn" class="btn btn-outline">Apply</button>
+        <select id="gb-grade" class="input-field" style="width:auto"><option value="" data-i18n="allGrades">All grades</option></select>
+        <select id="gb-section" class="input-field" style="width:auto"><option value="" data-i18n="allSections">All sections</option></select>
+        <input id="gb-subject" class="input-field" data-i18n-placeholder="subjectFilter" placeholder="Subject filter" style="width:auto">
+        <button id="gb-filter-btn" class="btn btn-outline" data-i18n="apply">Apply</button>
       </div>
       <div class="data-table-wrap">
         <table>
-          <thead><tr><th>Student</th><th>Class</th><th>Subject</th><th>Type</th><th>Assessment</th><th>Score</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="student">Student</th>
+            <th data-i18n="class">Class</th>
+            <th data-i18n="subject">Subject</th>
+            <th data-i18n="type">Type</th>
+            <th data-i18n="assessment">Assessment</th>
+            <th data-i18n="score">Score</th>
+          </tr></thead>
           <tbody id="gradebook-table"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Uploads (existing) -->
+    <div id="panel-sample" class="tab-panel section-hidden">
+      <h2 data-i18n="sampleDataTitle">Sample data downloads</h2>
+      <p class="muted" data-i18n="sampleDataDesc">Download dummy data as CSV files. Use these for testing or as import templates.</p>
+      <div class="card" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
+        <button class="btn btn-outline" data-download="students" data-i18n="downloadStudents">Download students (CSV)</button>
+        <button class="btn btn-outline" data-download="teachers" data-i18n="downloadTeachers">Download teachers (CSV)</button>
+        <button class="btn btn-outline" data-download="grades" data-i18n="downloadGrades">Download grades (CSV)</button>
+        <button class="btn btn-outline" data-download="schedules" data-i18n="downloadSchedules">Download class schedules (CSV)</button>
+      </div>
+    </div>
+
     <div id="panel-uploads" class="tab-panel section-hidden">
-      <h2>Upload schedule</h2>
+      <h2 data-i18n="uploadSchedule">Upload schedule</h2>
       <form id="schedule-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
-        <div class="form-row"><label>Title</label><input name="title" required></div>
-        <div class="form-row"><label>Label</label><input name="label"></div>
-        <div class="form-row" style="grid-column:1/-1"><label>File</label><input name="file" type="file" required></div>
-        <div><button type="submit" class="btn">Upload schedule</button></div>
+        <div class="form-row"><label data-i18n="title">Title</label><input name="title" required></div>
+        <div class="form-row"><label data-i18n="label">Label</label><input name="label"></div>
+        <div class="form-row" style="grid-column:1/-1"><label data-i18n="file">File</label><input name="file" type="file" required></div>
+        <div><button type="submit" class="btn" data-i18n="uploadScheduleBtn">Upload schedule</button></div>
       </form>
-      <h2>Upload grades file</h2>
+      <h2 data-i18n="uploadGradesFile">Upload grades file</h2>
       <form id="grades-form" class="card form-grid form-grid-2" enctype="multipart/form-data">
-        <div class="form-row"><label>Title</label><input name="title" required></div>
-        <div class="form-row"><label>Label</label><input name="label"></div>
-        <div class="form-row" style="grid-column:1/-1"><label>File</label><input name="file" type="file" required></div>
-        <div><button type="submit" class="btn">Upload grades</button></div>
+        <div class="form-row"><label data-i18n="title">Title</label><input name="title" required></div>
+        <div class="form-row"><label data-i18n="label">Label</label><input name="label"></div>
+        <div class="form-row" style="grid-column:1/-1"><label data-i18n="file">File</label><input name="file" type="file" required></div>
+        <div><button type="submit" class="btn" data-i18n="uploadGradesBtn">Upload grades</button></div>
       </form>
       <div id="uploads-list" class="card" style="margin-top:1rem"></div>
     </div>
 
-    <!-- Logs -->
     <div id="panel-logs" class="tab-panel section-hidden">
       <div class="data-table-wrap">
         <table>
-          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <thead><tr>
+            <th>Time</th>
+            <th data-i18n="name">Full name</th>
+            <th>Action</th>
+            <th>Details</th>
+          </tr></thead>
           <tbody id="logs-table"></tbody>
         </table>
       </div>
@@ -131,6 +162,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/dashboard-admin.js"></script>
 </body>
 </html>

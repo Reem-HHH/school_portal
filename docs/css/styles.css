@@ -9,7 +9,18 @@ body {
   background: #fff;
 }
 
-body.arabic { direction: rtl; }
+body.arabic { direction: rtl; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+
+html[dir="rtl"] th,
+html[dir="rtl"] td { text-align: right; }
+
+html[dir="rtl"] .header-inner { flex-direction: row-reverse; }
+
+html[dir="rtl"] .nav { flex-direction: row-reverse; }
+
+html[dir="rtl"] .tabs { flex-direction: row-reverse; }
+
+html[dir="rtl"] .form-grid { direction: rtl; }
 
 a { color: #111; }
 a:hover { text-decoration: underline; }

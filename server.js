@@ -12,6 +12,7 @@ const studentsRoutes = require('./routes/students');
 const teachersRoutes = require('./routes/teachers');
 const gradebookRoutes = require('./routes/gradebook');
 const schedulesRoutes = require('./routes/schedules');
+const exportsRoutes = require('./routes/exports');
 const { attachUser } = require('./middleware/auth');
 const { initDb } = require('./db/index');
 
@@ -60,6 +61,7 @@ app.use('/api/students', studentsRoutes);
 app.use('/api/teachers', teachersRoutes);
 app.use('/api/gradebook', gradebookRoutes);
 app.use('/api/schedules', schedulesRoutes);
+app.use('/api/exports', exportsRoutes);
 
 app.use(express.static(DOCS));
 

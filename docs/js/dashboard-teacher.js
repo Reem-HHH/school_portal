@@ -18,7 +18,7 @@ async function loadAssignments() {
   const sel = document.getElementById('class-select');
   sel.innerHTML = list.map(a =>
     `<option value="${a.subject}|${a.grade}|${a.section}">${a.subject} — ${a.grade} ${a.section}</option>`
-  ).join('') || '<option value="">No classes assigned</option>';
+  ).join('') || `<option value="">${t('noClasses')}</option>`;
   if (list.length) loadGradebook();
 }
 
@@ -47,7 +47,7 @@ async function loadGradebook() {
       <td><input type="number" class="max-input input-field" style="width:5rem"
           data-student-id="${g.student_id || g.id}" min="1"
           value="${g.max_score ?? 100}"></td>
-    </tr>`).join('') || '<tr><td colspan="3" class="muted">No students in this class</td></tr>';
+    </tr>`).join('') || `<tr><td colspan="3" class="muted">${t('noStudents')}</td></tr>`;
 }
 
 function renderScheduleTable(container, days, entries) {
@@ -55,7 +55,7 @@ function renderScheduleTable(container, days, entries) {
   const lookup = {};
   entries.forEach(e => { lookup[`${e.time_slot}|${e.day}`] = e.subject; });
 
-  container.innerHTML = `<table><thead><tr><th>Time</th>${days.map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>
+  container.innerHTML = `<table><thead><tr><th>${t('time')}</th>${days.map(d => `<th>${tDay(d)}</th>`).join('')}</tr></thead><tbody>
     ${slots.map(time => `<tr><td>${time}</td>${days.map(d => `<td>${lookup[`${time}|${d}`] || '—'}</td>`).join('')}</tr>`).join('')}
   </tbody></table>`;
 }
@@ -65,10 +65,31 @@ async function loadSchedule() {
   renderScheduleTable(document.getElementById('schedule-view'), days, entries);
 }
 
+function wireDownloads() {
+  document.getElementById('download-gradebook-btn')?.addEventListener('click', () => {
+    downloadCsv('/api/exports/grades', 'my-gradebook.csv').catch(err => showToast(err.message, 'error'));
+  });
+  document.getElementById('download-schedule-btn')?.addEventListener('click', () => {
+    downloadCsv('/api/exports/schedules', 'my-schedule.csv').catch(err => showToast(err.message, 'error'));
+  });
+  document.querySelectorAll('[data-download]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.download;
+      downloadCsv(`/api/exports/${type}`, `${type}.csv`).catch(err => showToast(err.message, 'error'));
+    });
+  });
+}
+
 async function init() {
+  initLanguageToggle();
   currentUser = await requireRole('teacher');
   if (!currentUser) return;
   document.getElementById('user-label').textContent = currentUser.full_name;
+
+  onLanguageChange(() => {
+    loadAssignments();
+    if (!document.getElementById('panel-schedule').classList.contains('section-hidden')) loadSchedule();
+  });
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -85,7 +106,7 @@ async function init() {
     const { subject, grade, section } = parseClassSelect(val);
     const assessmentType = document.getElementById('assessment-type').value;
     const assessmentName = document.getElementById('assessment-name').value.trim();
-    if (!assessmentName) { showToast('Enter assessment name', 'error'); return; }
+    if (!assessmentName) { showToast(t('enterAssessmentName'), 'error'); return; }
 
     const entries = [...document.querySelectorAll('.grade-input')].map(input => ({
       studentId: parseInt(input.dataset.studentId, 10),
@@ -95,7 +116,7 @@ async function init() {
 
     try {
       await API.post('/api/gradebook/bulk', { subject, grade, section, assessmentType, assessmentName, entries });
-      showToast('Grades saved');
+      showToast(t('gradesSaved'));
       loadGradebook();
     } catch (err) { showToast(err.message, 'error'); }
   });
@@ -105,6 +126,7 @@ async function init() {
     window.location.href = 'index.html';
   });
 
+  wireDownloads();
   await loadAssignments();
 }
 
