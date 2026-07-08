@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db/init');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { logAction } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -36,6 +37,14 @@ router.post('/register', (req, res) => {
   ).get(result.lastInsertRowid);
 
   req.session.user = user;
+
+  logAction(req, {
+    action: 'user.register',
+    entityType: 'user',
+    entityId: user.id,
+    details: { email: user.email, role: user.role }
+  });
+
   res.status(201).json({ user });
 });
 
@@ -51,10 +60,12 @@ router.post('/login', (req, res) => {
   ).get(email.toLowerCase().trim());
 
   if (!user || !user.is_active) {
+    logAction(req, { action: 'auth.login_failed', details: { email: email.toLowerCase().trim() } });
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
   if (!bcrypt.compareSync(password, user.password_hash)) {
+    logAction(req, { action: 'auth.login_failed', details: { email: email.toLowerCase().trim() } });
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
@@ -66,10 +77,26 @@ router.post('/login', (req, res) => {
   };
 
   req.session.user = sessionUser;
+
+  logAction(req, {
+    action: 'auth.login',
+    entityType: 'user',
+    entityId: user.id,
+    details: { email: user.email, role: user.role }
+  });
+
   res.json({ user: sessionUser });
 });
 
 router.post('/logout', (req, res) => {
+  const user = req.session.user;
+  logAction(req, {
+    action: 'auth.logout',
+    entityType: 'user',
+    entityId: user?.id,
+    details: { email: user?.email }
+  });
+
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: 'Could not log out' });
     res.clearCookie('connect.sid');
@@ -114,6 +141,13 @@ router.post('/users', requireAuth, requireRole('admin'), (req, res) => {
     'SELECT id, email, full_name, role, is_active, created_at FROM users WHERE id = ?'
   ).get(result.lastInsertRowid);
 
+  logAction(req, {
+    action: 'user.create',
+    entityType: 'user',
+    entityId: user.id,
+    details: { email: user.email, role: user.role }
+  });
+
   res.status(201).json({ user });
 });
 
@@ -128,8 +162,8 @@ router.patch('/users/:id', requireAuth, requireRole('admin'), (req, res) => {
   const { id } = req.params;
   const { fullName, role, isActive } = req.body;
 
-  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
-  if (!user) {
+  const before = db.prepare('SELECT id, email, full_name, role, is_active FROM users WHERE id = ?').get(id);
+  if (!before) {
     return res.status(404).json({ error: 'User not found' });
   }
 
@@ -152,6 +186,13 @@ router.patch('/users/:id', requireAuth, requireRole('admin'), (req, res) => {
     'SELECT id, email, full_name, role, is_active, created_at FROM users WHERE id = ?'
   ).get(id);
 
+  logAction(req, {
+    action: 'user.update',
+    entityType: 'user',
+    entityId: parseInt(id, 10),
+    details: { before, after: updated }
+  });
+
   res.json({ user: updated });
 });
 
@@ -162,10 +203,18 @@ router.delete('/users/:id', requireAuth, requireRole('admin'), (req, res) => {
     return res.status(400).json({ error: 'Cannot delete your own account' });
   }
 
+  const user = db.prepare('SELECT id, email, full_name, role FROM users WHERE id = ?').get(id);
   const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
   if (result.changes === 0) {
     return res.status(404).json({ error: 'User not found' });
   }
+
+  logAction(req, {
+    action: 'user.delete',
+    entityType: 'user',
+    entityId: parseInt(id, 10),
+    details: user
+  });
 
   res.json({ success: true });
 });

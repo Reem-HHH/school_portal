@@ -1,76 +1,92 @@
 const API = {
   async request(path, options = {}) {
     const res = await fetch(path, {
-      headers: { 'Content-Type': 'application/json', ...options.headers },
       credentials: 'same-origin',
-      ...options
+      ...options,
+      headers: { ...options.headers }
     });
 
     const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      throw new Error(data.error || 'Request failed');
-    }
-
+    if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   },
 
-  get(path) {
-    return this.request(path);
-  },
+  get(path) { return this.request(path); },
 
   post(path, body) {
-    return this.request(path, { method: 'POST', body: JSON.stringify(body) });
+    return this.request(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  },
+
+  postForm(path, formData) {
+    return this.request(path, { method: 'POST', body: formData });
   },
 
   patch(path, body) {
-    return this.request(path, { method: 'PATCH', body: JSON.stringify(body) });
+    return this.request(path, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
   },
 
-  delete(path) {
-    return this.request(path, { method: 'DELETE' });
-  }
+  delete(path) { return this.request(path, { method: 'DELETE' }); }
 };
 
 function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-
-  const toast = document.createElement('div');
-  toast.className = `toast fixed top-4 right-4 z-[100] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold ${
-    type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
-  }`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  const el = document.createElement('div');
+  el.className = `toast${type === 'error' ? ' error' : ''}`;
+  el.textContent = message;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
 }
 
-async function requireAuth(redirectTo = '/login.html') {
+async function requireAuth() {
   try {
     const { user } = await API.get('/api/auth/me');
     return user;
   } catch {
-    window.location.href = redirectTo;
+    window.location.href = '/login.html';
     return null;
   }
 }
 
-async function redirectIfAuthed(target = '/index.html') {
+async function redirectIfAuthed() {
   try {
     await API.get('/api/auth/me');
-    window.location.href = target;
-  } catch {
-    /* not logged in */
-  }
-}
-
-function roleBadgeClass(role) {
-  return `role-badge role-${role}`;
+    window.location.href = '/index.html';
+  } catch { /* not logged in */ }
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric'
+  const normalized = iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z';
+  return new Date(normalized).toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
+}
+
+function renderDataTable(container, parsed) {
+  if (!parsed?.headers?.length) {
+    container.innerHTML = '<div class="empty">No tabular data in this file.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="data-table-wrap">
+      <table>
+        <thead><tr>${parsed.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${parsed.rows.map(row =>
+          `<tr>${parsed.headers.map(h => `<td>${escapeHtml(String(row[h] ?? ''))}</td>`).join('')}</tr>`
+        ).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

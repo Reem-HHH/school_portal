@@ -1,73 +1,70 @@
-# Digital School Management Portal
+# School Portal
 
-A full-stack school management portal with authentication, role-based access, SQLite database, and bilingual (English/Arabic) support.
+Minimal school portal. Admins upload schedules and grades as **images** or **Excel/CSV files**. All user actions are logged.
 
-## Features
-
-- **Authentication**: Login, self-registration (parent/student), session-based auth
-- **Admin panel**: Create users, assign roles, activate/deactivate accounts, delete users
-- **Dashboard**: Live stats, announcements, weekly timetable
-- **Grading**: Teachers and admins can enter and save exam grades
-- **Students**: Add and view student records stored in the database
-- **Bilingual UI**: English and Arabic with RTL support
-
-## Quick Start
+## Run locally
 
 ```bash
 npm install
-cp .env.example .env   # optional — defaults work for local dev
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to the login page.
+Open http://localhost:3000
 
-## Demo Accounts
+**Admin:** `admin@school.com` / `admin123`
 
-| Role    | Email               | Password    |
-|---------|---------------------|-------------|
-| Admin   | admin@school.com    | admin123    |
-| Teacher | teacher@school.com  | teacher123  |
+## Features
 
-Parents and students can register at `/register.html`.
+- Minimal black-and-white UI
+- Admin uploads for schedules and grades (image or spreadsheet)
+- Spreadsheet files are parsed and shown as tables; images are displayed directly
+- User login, registration (parent/student), admin user management
+- Activity log of every login, upload, and user change
 
-## Tech Stack
+## Admin uploads
 
-- **Backend**: Node.js, Express, express-session
-- **Database**: SQLite (via better-sqlite3) — stored in `data/school.db`
-- **Frontend**: HTML, Tailwind CSS, vanilla JavaScript
-- **Auth**: bcrypt password hashing, cookie sessions
+| Type | Image | Data file |
+|------|-------|-----------|
+| Schedule | JPG, PNG, WebP | CSV or Excel (first row = headers) |
+| Grades | JPG, PNG, WebP | CSV or Excel (first row = headers) |
 
-## API Endpoints
+Go to **Admin → Uploads** to publish content. Users see it under **Schedules** or **Grades** on the main portal.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/auth/login` | Sign in |
-| POST | `/api/auth/register` | Register (parent/student) |
-| POST | `/api/auth/logout` | Sign out |
-| GET | `/api/auth/me` | Current user |
-| GET/POST/PATCH/DELETE | `/api/auth/users` | Admin user management |
-| GET | `/api/dashboard/stats` | Dashboard statistics |
-| GET/POST | `/api/students` | Student records |
-| GET/POST | `/api/grades` | Grade entry |
-| GET | `/api/schedule` | Weekly timetable |
+## Deploy online (Render — free tier)
 
-## Environment Variables
+1. Push this repo to GitHub
+2. Go to [render.com](https://render.com) → **New → Blueprint**
+3. Connect the repo — Render reads `render.yaml` automatically
+4. Set a strong `ADMIN_PASSWORD` in the dashboard after deploy
+5. Your site will be at `https://your-app.onrender.com`
 
-See `.env.example` for `PORT`, `SESSION_SECRET`, and default admin credentials.
+The Render config mounts a **persistent disk** at `data/` so uploads and the database survive restarts.
 
-## Project Structure
+### Deploy with Docker (any host)
+
+```bash
+docker build -t school-portal .
+docker run -p 3000:3000 -v school-data:/app/data -e SESSION_SECRET=your-secret school-portal
+```
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Server port (default 3000) |
+| `SESSION_SECRET` | Required in production |
+| `ADMIN_EMAIL` | First admin email |
+| `ADMIN_PASSWORD` | First admin password |
+| `NODE_ENV` | Set to `production` when deployed |
+
+## Project structure
 
 ```
-├── server.js           # Express server
-├── db/init.js          # Database schema & seed data
-├── routes/             # API route handlers
-├── middleware/         # Auth middleware
-├── public/             # Frontend static files
-│   ├── index.html      # Main dashboard
-│   ├── login.html
-│   ├── register.html
-│   ├── admin.html
-│   ├── css/
-│   └── js/
-└── data/               # SQLite database (auto-created)
+server.js           Express server
+db/init.js          SQLite schema
+routes/             API routes
+lib/audit.js        Activity logging
+public/             Frontend pages
+data/               Database + uploads (auto-created)
+render.yaml         Render deployment config
 ```
