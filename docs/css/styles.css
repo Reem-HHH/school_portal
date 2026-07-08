@@ -57,9 +57,9 @@ a:hover { text-decoration: underline; }
 }
 
 .moe-logo {
-  height: 52px;
+  height: 48px;
   width: auto;
-  max-width: 200px;
+  max-width: 140px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -83,7 +83,8 @@ a:hover { text-decoration: underline; }
 }
 
 .auth-brand .moe-logo {
-  height: 44px;
+  height: 40px;
+  max-width: 120px;
 }
 
 html[dir="rtl"] .brand-bar,
