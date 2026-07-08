@@ -2,7 +2,7 @@ async function columnExists(db, usePg, table, column) {
   if (usePg) {
     const row = await db.get(`
       SELECT 1 FROM information_schema.columns
-      WHERE table_name = ? AND column_name = ?
+      WHERE table_schema = 'public' AND table_name = ? AND column_name = ?
     `, [table, column]);
     return !!row;
   }
@@ -10,11 +10,34 @@ async function columnExists(db, usePg, table, column) {
   return cols.some(c => c.name === column);
 }
 
+async function tableExists(db, usePg, table) {
+  if (usePg) {
+    const row = await db.get(`
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = ?
+    `, [table]);
+    return !!row;
+  }
+  const row = await db.get(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+    [table]
+  );
+  return !!row;
+}
+
 async function migrateAssessments(db, usePg) {
+  if (!(await tableExists(db, usePg, 'assessments'))) {
+    return;
+  }
+
   const hasAssessmentId = await columnExists(db, usePg, 'formative_grades', 'assessment_id');
   if (!hasAssessmentId) {
-    await db.run('ALTER TABLE formative_grades ADD COLUMN assessment_id INTEGER REFERENCES assessments(id) ON DELETE CASCADE');
+    await db.run(
+      'ALTER TABLE formative_grades ADD COLUMN assessment_id INTEGER REFERENCES assessments(id) ON DELETE CASCADE'
+    );
   }
+
+  await db.run('CREATE INDEX IF NOT EXISTS idx_formative_assessment ON formative_grades(assessment_id)');
 
   const unlinked = await db.all(`
     SELECT DISTINCT fg.subject, fg.grade_level, fg.section, fg.assessment_type, fg.assessment_name,

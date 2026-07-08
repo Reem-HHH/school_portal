@@ -65,7 +65,6 @@ const RBAC_SCHEMA = `
   CREATE INDEX IF NOT EXISTS idx_students_grade_section ON students(grade, section);
   CREATE INDEX IF NOT EXISTS idx_assessments_class ON assessments(grade_level, section, subject);
   CREATE INDEX IF NOT EXISTS idx_formative_student ON formative_grades(student_id);
-  CREATE INDEX IF NOT EXISTS idx_formative_assessment ON formative_grades(assessment_id);
   CREATE INDEX IF NOT EXISTS idx_formative_class ON formative_grades(grade_level, section, subject);
   CREATE INDEX IF NOT EXISTS idx_schedule_teacher ON schedule_entries(teacher_id);
   CREATE INDEX IF NOT EXISTS idx_schedule_class ON schedule_entries(grade, section);
@@ -138,7 +137,6 @@ const RBAC_SCHEMA_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_students_grade_section ON students(grade, section);
   CREATE INDEX IF NOT EXISTS idx_assessments_class ON assessments(grade_level, section, subject);
   CREATE INDEX IF NOT EXISTS idx_formative_student ON formative_grades(student_id);
-  CREATE INDEX IF NOT EXISTS idx_formative_assessment ON formative_grades(assessment_id);
   CREATE INDEX IF NOT EXISTS idx_formative_class ON formative_grades(grade_level, section, subject);
   CREATE INDEX IF NOT EXISTS idx_schedule_teacher ON schedule_entries(teacher_id);
   CREATE INDEX IF NOT EXISTS idx_schedule_class ON schedule_entries(grade, section);
