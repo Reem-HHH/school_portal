@@ -2,6 +2,8 @@
 
 Minimal school portal with admin uploads, user auth, and activity logging.
 
+**Full step-by-step guide:** see [USER_GUIDE.md](./USER_GUIDE.md) for local/online setup, logins, uploads, where files are stored, and troubleshooting.
+
 ## Run locally
 
 ```bash
