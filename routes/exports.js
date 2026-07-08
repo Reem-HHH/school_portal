@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { toCsv } = require('../lib/csv');
-const { buildBrandedBuffer } = require('../lib/branded-export');
+const { buildBrandedBuffer, buildScheduleTimetableBuffer, groupScheduleEntries } = require('../lib/branded-export');
 
 const router = express.Router();
 const activeClause = db.usePg ? 'is_active = true' : 'is_active = 1';
@@ -22,6 +22,14 @@ async function sendBrandedXlsx(res, filename, options) {
 
 function wantsCsv(req) {
   return String(req.query.format || '').toLowerCase() === 'csv';
+}
+
+async function sendScheduleTimetableXlsx(res, filename, rows, { teacherName = '' } = {}) {
+  const sheets = groupScheduleEntries(rows, { teacherName });
+  const buffer = await buildScheduleTimetableBuffer({ sheets });
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(Buffer.from(buffer));
 }
 
 async function respondExport(req, res, {
@@ -182,20 +190,15 @@ router.get('/schedules', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    await respondExport(req, res, {
-      baseName: 'schedules',
-      title: user.role === 'teacher' ? 'My Schedule Export' : 'Class Schedules Export',
-      sheetName: 'Schedules',
-      csvHeaders: ['teacher_name', 'grade', 'section', 'day', 'time_slot', 'subject'],
-      columns: [
-        { key: 'teacher_name', header: 'Teacher', width: 22 },
-        { key: 'grade', header: 'Grade', width: 12 },
-        { key: 'section', header: 'Section', width: 12 },
-        { key: 'day', header: 'Day', width: 14 },
-        { key: 'time_slot', header: 'Time', width: 14 },
-        { key: 'subject', header: 'Subject', width: 18 }
-      ],
-      rows
+    if (wantsCsv(req)) {
+      return sendCsv(res, 'schedules.csv',
+        ['teacher_name', 'grade', 'section', 'day', 'time_slot', 'subject'],
+        rows
+      );
+    }
+
+    await sendScheduleTimetableXlsx(res, 'schedules.xlsx', rows, {
+      teacherName: user.role === 'teacher' ? user.full_name : ''
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
