@@ -6,7 +6,6 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
-const uploadsRoutes = require('./routes/uploads');
 const auditRoutes = require('./routes/audit');
 const studentsRoutes = require('./routes/students');
 const teachersRoutes = require('./routes/teachers');
@@ -56,7 +55,6 @@ app.use(session({
 app.use(attachUser);
 
 app.use('/api/auth', authRoutes);
-app.use('/api/uploads', uploadsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/students', studentsRoutes);
 app.use('/api/teachers', teachersRoutes);
