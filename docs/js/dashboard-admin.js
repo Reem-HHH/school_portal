@@ -169,6 +169,12 @@ async function loadStudents() {
   renderStudents();
 }
 
+function clearMasterGradebook(message) {
+  gradebookCache = [];
+  document.getElementById('gradebook-table').innerHTML =
+    `<tr><td colspan="6" class="muted">${escapeHtml(message || t('selectGradeSectionHint'))}</td></tr>`;
+}
+
 function renderMasterGradebook() {
   const sortKey = document.getElementById('gradebook-sort')?.value || 'student-asc';
   const grades = sortItems(gradebookCache, sortKey, {
@@ -193,10 +199,14 @@ function renderMasterGradebook() {
 async function loadMasterGradebook() {
   const grade = document.getElementById('gb-grade')?.value || '';
   const section = document.getElementById('gb-section')?.value || '';
+
+  if (!grade || !section) {
+    clearMasterGradebook();
+    return;
+  }
+
   const subject = document.getElementById('gb-subject')?.value.trim() || '';
-  const params = new URLSearchParams();
-  if (grade) params.set('grade', grade);
-  if (section) params.set('section', section);
+  const params = new URLSearchParams({ grade, section });
   if (subject) params.set('subject', subject);
 
   const { grades } = await API.get('/api/gradebook?' + params.toString());
@@ -214,14 +224,16 @@ async function loadFilters() {
   ['filter-grade', 'gb-grade'].forEach(id => {
     const el = document.getElementById(id);
     const saved = id === 'filter-grade' ? gradeVal : gbGradeVal;
-    el.innerHTML = `<option value="">${t('allGrades')}</option>` + grades.map(g =>
+    const placeholder = id === 'gb-grade' ? t('selectGrade') : t('allGrades');
+    el.innerHTML = `<option value="">${placeholder}</option>` + grades.map(g =>
       `<option${g === saved ? ' selected' : ''}>${g}</option>`
     ).join('');
   });
   ['filter-section', 'gb-section'].forEach(id => {
     const el = document.getElementById(id);
     const saved = id === 'filter-section' ? sectionVal : gbSectionVal;
-    el.innerHTML = `<option value="">${t('allSections')}</option>` + sections.map(s =>
+    const placeholder = id === 'gb-section' ? t('selectSection') : t('allSections');
+    el.innerHTML = `<option value="">${placeholder}</option>` + sections.map(s =>
       `<option${s === saved ? ' selected' : ''}>${s}</option>`
     ).join('');
   });
@@ -271,7 +283,13 @@ async function init() {
     renderUsers();
     if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachers();
     if (!document.getElementById('panel-students').classList.contains('section-hidden')) renderStudents();
-    if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) renderMasterGradebook();
+    if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
+      if (document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value) {
+        renderMasterGradebook();
+      } else {
+        clearMasterGradebook();
+      }
+    }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
     loadUploadsList();
   });
@@ -281,7 +299,7 @@ async function init() {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === 'teachers') loadTeachers();
       if (tab.dataset.tab === 'students') loadStudents();
-      if (tab.dataset.tab === 'gradebook') loadMasterGradebook();
+      if (tab.dataset.tab === 'gradebook') clearMasterGradebook();
       if (tab.dataset.tab === 'logs') loadLogs();
     });
   });
