@@ -124,11 +124,12 @@ a:hover {
 }
 
 .moe-logo {
-  height: 48px;
+  height: 44px;
   width: auto;
-  max-width: 140px;
+  max-width: 96px;
   object-fit: contain;
   flex-shrink: 0;
+  display: block;
 }
 
 .school-brand { min-width: 0; }
@@ -150,7 +151,7 @@ a:hover {
 
 .auth-brand .moe-logo {
   height: 40px;
-  max-width: 120px;
+  max-width: 88px;
 }
 
 html[dir="rtl"] .brand-bar,
