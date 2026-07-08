@@ -1,15 +1,55 @@
+/* UAE Ministry of Education — Federal Visual Identity
+   Colors: Gold PMS 8960, Silver PMS 877, Iron Cool Gray
+   Digital body: Arial | Headings: Cronos Pro / AXT Manal substitutes */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+
+:root {
+  /* Primary palette — UAE Federal Ministries */
+  --moe-gold: #B68A35;
+  --moe-gold-dark: #92722A;
+  --moe-gold-light: #F9F7ED;
+  --moe-silver: #C6C6C6;
+  --moe-silver-light: #ECECEC;
+  --moe-iron: #404042;
+  --moe-white: #FFFFFF;
+
+  /* Secondary palette accents (UAE flag) */
+  --moe-red: #CE1126;
+  --moe-green: #00732F;
+
+  /* Typography — digital guidelines */
+  --font-body: Arial, Helvetica, 'Segoe UI', sans-serif;
+  --font-body-ar: Arial, 'Noto Naskh Arabic', Tahoma, sans-serif;
+  --font-heading: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-heading-ar: 'Noto Naskh Arabic', 'Source Serif 4', Georgia, serif;
+
+  --text-primary: var(--moe-iron);
+  --text-muted: #6B6B6D;
+  --border: var(--moe-silver-light);
+  --border-strong: var(--moe-silver);
+  --surface: var(--moe-white);
+  --surface-muted: #F7F7F7;
+  --accent: var(--moe-gold-dark);
+  --accent-hover: #7A6124;
+  --focus-ring: var(--moe-gold);
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: 15px;
-  line-height: 1.5;
-  color: #111;
-  background: #fff;
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--moe-white);
 }
 
-body.arabic { direction: rtl; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+body.arabic {
+  direction: rtl;
+  font-family: var(--font-body-ar);
+}
 
 html[dir="rtl"] th,
 html[dir="rtl"] td { text-align: right; }
@@ -22,8 +62,15 @@ html[dir="rtl"] .tabs { flex-direction: row-reverse; }
 
 html[dir="rtl"] .form-grid { direction: rtl; }
 
-a { color: #111; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--moe-gold-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
 
 .layout {
   max-width: 960px;
@@ -31,10 +78,30 @@ a:hover { text-decoration: underline; }
   padding: 0 1.25rem 3rem;
 }
 
+/* Gold accent bar — federal ministry web pattern */
 .header {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 2px solid var(--moe-gold);
   padding: 1rem 0;
   margin-bottom: 2rem;
+  background: var(--moe-white);
+  box-shadow: 0 1px 0 var(--moe-silver-light);
+}
+
+.header::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, var(--moe-gold) 0%, var(--moe-gold-dark) 100%);
+  margin-bottom: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.header {
+  position: relative;
+  padding-top: calc(1rem + 4px);
 }
 
 .header-inner {
@@ -64,13 +131,12 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-.school-brand {
-  min-width: 0;
-}
+.school-brand { min-width: 0; }
 
 .school-subtitle {
   margin: 0.15rem 0 0;
   font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
 .auth-brand {
@@ -79,7 +145,7 @@ a:hover { text-decoration: underline; }
   gap: 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
 }
 
 .auth-brand .moe-logo {
@@ -94,11 +160,21 @@ html[dir="rtl"] .auth-brand {
 }
 
 .logo {
-  font-size: 1rem;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.01em;
   text-decoration: none;
-  color: #111;
+  color: var(--moe-gold-dark);
+}
+
+html[dir="rtl"] .logo {
+  font-family: var(--font-heading-ar);
+}
+
+.logo:hover {
+  color: var(--accent-hover);
+  text-decoration: none;
 }
 
 .nav {
@@ -113,95 +189,121 @@ html[dir="rtl"] .auth-brand {
   border: none;
   padding: 0.4rem 0.65rem;
   font: inherit;
-  color: #555;
+  color: var(--text-muted);
   cursor: pointer;
   text-decoration: none;
   border-radius: 4px;
 }
 
 .nav button:hover, .nav a:hover {
-  color: #111;
-  background: #f5f5f5;
+  color: var(--moe-gold-dark);
+  background: var(--moe-gold-light);
   text-decoration: none;
 }
 
 .nav .active {
-  color: #111;
-  font-weight: 500;
-}
-
-h1, h2 {
+  color: var(--moe-gold-dark);
   font-weight: 600;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.5rem;
 }
 
-h1 { font-size: 1.5rem; }
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.5rem;
+  color: var(--moe-iron);
+}
+
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3 {
+  font-family: var(--font-heading-ar);
+}
+
+h1 { font-size: 1.5rem; color: var(--moe-gold-dark); }
 h2 { font-size: 1.125rem; margin-top: 2rem; }
 
-.muted { color: #666; font-size: 0.875rem; }
+.muted {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
 
 .section-hidden { display: none !important; }
 
 .card {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 1.25rem;
   margin-bottom: 1rem;
+  background: var(--surface);
 }
 
 label {
   display: block;
   font-size: 0.8125rem;
-  color: #444;
+  font-weight: 600;
+  color: var(--moe-iron);
   margin-bottom: 0.35rem;
 }
 
 input, select, textarea {
   width: 100%;
   padding: 0.55rem 0.65rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   font: inherit;
-  background: #fff;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
 input:focus, select:focus, textarea:focus {
-  outline: 2px solid #111;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
-  border-color: #111;
+  border-color: var(--moe-gold);
 }
 
 .btn {
   display: inline-block;
   padding: 0.55rem 1rem;
-  background: #111;
-  color: #fff;
+  background: var(--moe-gold-dark);
+  color: var(--moe-white);
   border: none;
   border-radius: 4px;
   font: inherit;
   font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.btn:hover { background: #333; }
+.btn:hover { background: var(--accent-hover); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-outline {
-  background: #fff;
-  color: #111;
-  border: 1px solid #ccc;
+  background: var(--surface);
+  color: var(--moe-gold-dark);
+  border: 1px solid var(--moe-gold);
 }
 
-.btn-outline:hover { background: #f5f5f5; }
+.btn-outline:hover {
+  background: var(--moe-gold-light);
+  color: var(--accent-hover);
+}
+
+#lang-toggle.btn-outline {
+  min-width: 2.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
 
 .btn-danger {
-  background: #fff;
-  color: #b00020;
-  border: 1px solid #e5e5e5;
+  background: var(--surface);
+  color: var(--moe-red);
+  border: 1px solid var(--moe-silver);
 }
 
-.btn-danger:hover { background: #fff5f5; }
+.btn-danger:hover { background: #FFF5F5; }
 
 .form-row { margin-bottom: 1rem; }
 
@@ -224,35 +326,37 @@ table {
 th, td {
   text-align: left;
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--border);
 }
 
 th {
-  font-weight: 500;
-  color: #444;
+  font-weight: 600;
+  color: var(--moe-gold-dark);
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  background: var(--moe-gold-light);
 }
 
 .data-table-wrap {
   overflow-x: auto;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .image-view {
   max-width: 100%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .empty {
   padding: 2rem;
   text-align: center;
-  color: #888;
-  border: 1px dashed #ddd;
+  color: var(--text-muted);
+  border: 1px dashed var(--moe-silver);
   border-radius: 6px;
+  background: var(--surface-muted);
 }
 
 .toast {
@@ -261,14 +365,19 @@ th {
   right: 1rem;
   z-index: 100;
   padding: 0.65rem 1rem;
-  background: #111;
-  color: #fff;
+  background: var(--moe-iron);
+  color: var(--moe-white);
   font-size: 0.875rem;
   border-radius: 4px;
   animation: fadeIn 0.2s ease;
 }
 
-.toast.error { background: #b00020; }
+html[dir="rtl"] .toast {
+  right: auto;
+  left: 1rem;
+}
+
+.toast.error { background: var(--moe-red); }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
@@ -278,7 +387,7 @@ th {
 .tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 1.5rem;
 }
 
@@ -288,26 +397,30 @@ th {
   border: none;
   border-bottom: 2px solid transparent;
   font: inherit;
-  color: #666;
+  color: var(--text-muted);
   cursor: pointer;
   margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
+.tab:hover { color: var(--moe-gold-dark); }
+
 .tab.active {
-  color: #111;
-  border-bottom-color: #111;
-  font-weight: 500;
+  color: var(--moe-gold-dark);
+  border-bottom-color: var(--moe-gold);
+  font-weight: 600;
 }
 
 .badge {
   display: inline-block;
   font-size: 0.6875rem;
   padding: 0.15rem 0.45rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--moe-silver);
   border-radius: 3px;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  background: var(--surface-muted);
 }
 
 .auth-page {
@@ -316,18 +429,24 @@ th {
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
+  background: linear-gradient(180deg, var(--moe-gold-light) 0%, var(--moe-white) 28%);
 }
 
 .auth-box {
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
 }
 
 .auth-box h1 { margin-bottom: 0.25rem; }
 
+.auth-box .card {
+  border-color: var(--moe-silver);
+  box-shadow: 0 2px 8px rgba(64, 64, 66, 0.06);
+}
+
 .log-details {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--text-muted);
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -346,7 +465,7 @@ th {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
 }
 
 .upload-list li:last-child { border-bottom: none; }
@@ -355,10 +474,20 @@ th {
   background: none;
   border: none;
   font: inherit;
-  color: #555;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
 }
 
-.upload-list button:hover { color: #111; }
-.upload-list button.active { font-weight: 600; color: #111; }
+.upload-list button:hover { color: var(--moe-gold-dark); }
+.upload-list button.active { font-weight: 600; color: var(--moe-gold-dark); }
+
+/* Auth page school name heading */
+.auth-brand h1 {
+  font-family: var(--font-heading);
+  color: var(--moe-gold-dark);
+}
+
+html[dir="rtl"] .auth-brand h1 {
+  font-family: var(--font-heading-ar);
+}

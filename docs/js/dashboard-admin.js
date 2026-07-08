@@ -69,7 +69,7 @@ async function loadUsers() {
 async function loadTeachers() {
   const { teachers } = await API.get('/api/teachers');
   document.getElementById('teachers-list').innerHTML = teachers.map(teacher => `
-    <div style="padding:0.75rem 0;border-bottom:1px solid #eee">
+    <div style="padding:0.75rem 0;border-bottom:1px solid var(--border, #ECECEC)">
       <strong>${escapeHtml(teacher.full_name)}</strong> · ${escapeHtml(teacher.email)}
       <p class="muted" style="margin:0.25rem 0 0">${teacher.assignments?.map(a => `${a.subject} (${a.grade} ${a.section})`).join(' · ') || t('noTeachers')}</p>
     </div>`).join('') || `<p class="muted">${t('noTeachers')}</p>`;

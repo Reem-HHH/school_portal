@@ -55,7 +55,7 @@ function showBackendNotice() {
   if (!location.hostname.endsWith('.github.io') || API_BASE) return;
   const box = document.createElement('div');
   box.className = 'card';
-  box.style.cssText = 'margin-bottom:1rem;border-color:#b00020;color:#b00020;font-size:0.875rem';
+  box.style.cssText = 'margin-bottom:1rem;border-color:#CE1126;color:#CE1126;font-size:0.875rem';
   box.innerHTML = '<strong>Backend not connected.</strong> GitHub Pages only shows the frontend. Deploy the server to <a href="https://render.com" target="_blank">Render</a>, then add your Render URL to the <code>api-base</code> meta tag in index.html.';
   document.querySelector('.auth-box')?.prepend(box);
 }
