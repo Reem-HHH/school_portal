@@ -29,27 +29,94 @@
     <div class="tabs">
       <button class="tab active" data-tab="schedule" data-i18n="tabSchedule">My Schedule</button>
       <button class="tab" data-tab="gradebook" data-i18n="tabGradebook">Gradebook</button>
+      <button class="tab" data-tab="assessment" data-i18n="tabNewAssessment">New Assessment</button>
       <button class="tab" data-tab="data" data-i18n="tabSampleData">Sample Data</button>
     </div>
 
     <div id="panel-schedule" class="tab-panel">
       <h2 data-i18n="mySchedule">My schedule</h2>
       <div id="schedule-view" class="data-table-wrap"></div>
-      <button id="download-schedule-btn" class="btn btn-outline mt-1" data-i18n="downloadSchedule">Download schedule (CSV)</button>
+      <button id="download-schedule-btn" class="btn btn-outline mt-1" data-i18n="downloadSchedule">Download schedule (Excel)</button>
     </div>
 
     <div id="panel-gradebook" class="tab-panel section-hidden">
-      <h2 data-i18n="formativeGradebook">Formative assessment gradebook</h2>
-      <div class="card form-grid form-grid-3 mb-1">
+      <div id="gradebook-overview">
+        <h2 data-i18n="classGradebook">Class gradebook</h2>
+        <div class="card form-grid form-grid-3 mb-1">
+          <div class="form-row">
+            <label data-i18n="grade">Grade</label>
+            <select id="gb-grade">
+              <option value="" data-i18n="selectGrade">Select grade</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label data-i18n="section">Section</label>
+            <select id="gb-section">
+              <option value="" data-i18n="selectSection">Select section</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label data-i18n="subject">Subject</label>
+            <select id="gb-subject">
+              <option value="" data-i18n="selectSubject">Select subject</option>
+            </select>
+          </div>
+        </div>
+        <div id="gradebook-matrix-wrap" class="data-table-wrap"></div>
+        <div class="actions-row mt-1">
+          <button id="goto-new-assessment-btn" class="btn btn-outline" data-i18n="createAssessment">Create assessment</button>
+          <button id="download-gradebook-btn" class="btn btn-outline" data-i18n="downloadGradebook">Download gradebook (Excel)</button>
+        </div>
+      </div>
+
+      <div id="gradebook-marking" class="section-hidden">
+        <div class="actions-row mb-1">
+          <button id="back-to-gradebook-btn" class="btn btn-outline" data-i18n="backToGradebook">Back to gradebook</button>
+        </div>
+        <h2 id="marking-title" data-i18n="markStudents">Mark students</h2>
+        <p id="marking-meta" class="muted mb-1"></p>
+        <div class="data-table-wrap">
+          <table>
+            <thead><tr>
+              <th data-i18n="student">Student</th>
+              <th data-i18n="score">Score</th>
+              <th data-i18n="outOf">Out of</th>
+            </tr></thead>
+            <tbody id="marking-body"></tbody>
+          </table>
+        </div>
+        <div class="actions-row mt-1">
+          <button id="save-marks-btn" class="btn" data-i18n="saveGrades">Save grades</button>
+          <button id="close-assessment-btn" class="btn btn-outline" data-i18n="closeAssessment">Close assessment</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-assessment" class="tab-panel section-hidden">
+      <h2 data-i18n="createAssessment">Create assessment</h2>
+      <p class="muted mb-1" data-i18n="newAssessmentDesc">Set up a new assessment before entering student scores.</p>
+      <form id="create-assessment-form" class="card form-grid form-grid-3">
         <div class="form-row">
-          <label data-i18n="class">Class</label>
-          <select id="class-select">
-            <option value="" data-i18n="selectClass">Select class</option>
+          <label data-i18n="grade">Grade</label>
+          <select id="new-grade" required>
+            <option value="" data-i18n="selectGrade">Select grade</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="section">Section</label>
+          <select id="new-section" required>
+            <option value="" data-i18n="selectSection">Select section</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="subject">Subject</label>
+          <select id="new-subject" required>
+            <option value="" data-i18n="selectSubject">Select subject</option>
           </select>
         </div>
         <div class="form-row">
           <label data-i18n="assessmentType">Assessment type</label>
-          <select id="assessment-type">
+          <select id="new-type" required>
             <option value="quiz" data-i18n="quiz">Quiz</option>
             <option value="exam" data-i18n="exam">Exam</option>
             <option value="assignment" data-i18n="assignment">Assignment</option>
@@ -57,23 +124,16 @@
         </div>
         <div class="form-row">
           <label data-i18n="assessmentName">Assessment name</label>
-          <input id="assessment-name" data-i18n-placeholder="assessmentName" placeholder="Quiz 1" required>
+          <input id="new-name" required data-i18n-placeholder="assessmentName" placeholder="Quiz 1">
         </div>
-      </div>
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr>
-            <th data-i18n="student">Student</th>
-            <th data-i18n="score">Score</th>
-            <th data-i18n="outOf">Out of</th>
-          </tr></thead>
-          <tbody id="gradebook-body"></tbody>
-        </table>
-      </div>
-      <div class="actions-row">
-        <button id="save-grades-btn" class="btn" data-i18n="saveGrades">Save grades</button>
-        <button id="download-gradebook-btn" class="btn btn-outline" data-i18n="downloadGradebook">Download gradebook (CSV)</button>
-      </div>
+        <div class="form-row">
+          <label data-i18n="maxScore">Maximum score</label>
+          <input id="new-max" type="number" min="1" step="1" value="100" required>
+        </div>
+        <div class="form-row span-full">
+          <button type="submit" class="btn" data-i18n="createAssessment">Create assessment</button>
+        </div>
+      </form>
     </div>
 
     <div id="panel-data" class="tab-panel section-hidden">
