@@ -1,7 +1,14 @@
+const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.apiBase) || '';
+
+function assetUrl(path) {
+  if (!path.startsWith('/')) return path;
+  return API_BASE + path;
+}
+
 const API = {
   async request(path, options = {}) {
-    const res = await fetch(path, {
-      credentials: 'same-origin',
+    const res = await fetch(API_BASE + path, {
+      credentials: 'include',
       ...options,
       headers: { ...options.headers }
     });
@@ -44,12 +51,21 @@ function showToast(message, type = 'success') {
   setTimeout(() => el.remove(), 3000);
 }
 
+function showBackendNotice() {
+  if (!location.hostname.endsWith('.github.io') || API_BASE) return;
+  const box = document.createElement('div');
+  box.className = 'card';
+  box.style.cssText = 'margin-bottom:1rem;border-color:#b00020;color:#b00020;font-size:0.875rem';
+  box.innerHTML = '<strong>Backend not connected.</strong> GitHub Pages only shows the frontend. Deploy the server to <a href="https://render.com" target="_blank">Render</a>, then add your Render URL to the <code>api-base</code> meta tag in index.html.';
+  document.querySelector('.auth-box')?.prepend(box);
+}
+
 async function requireAuth() {
   try {
     const { user } = await API.get('/api/auth/me');
     return user;
   } catch {
-    window.location.href = '/login.html';
+    window.location.href = 'index.html';
     return null;
   }
 }
@@ -57,7 +73,7 @@ async function requireAuth() {
 async function redirectIfAuthed() {
   try {
     await API.get('/api/auth/me');
-    window.location.href = '/index.html';
+    window.location.href = 'portal.html';
   } catch { /* not logged in */ }
 }
 

@@ -35,7 +35,7 @@ async function buildPicker(containerId, type, viewId) {
   const load = async (id) => {
     const { upload } = await API.get(`/api/uploads/${id}`);
     if (upload.display_format === 'image') {
-      view.innerHTML = `<img class="image-view" src="${upload.file_url}" alt="${upload.title}">`;
+      view.innerHTML = `<img class="image-view" src="${assetUrl(upload.file_url)}" alt="${upload.title}">`;
     } else {
       renderDataTable(view, upload.parsed_data);
     }
@@ -70,7 +70,7 @@ async function init() {
 
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await API.post('/api/auth/logout');
-    window.location.href = '/login.html';
+    window.location.href = 'index.html';
   });
 
   await Promise.all([

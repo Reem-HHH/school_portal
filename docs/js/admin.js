@@ -116,7 +116,7 @@ async function init() {
   initLanguageToggle();
   currentUser = await requireAuth();
   if (!currentUser || currentUser.role !== 'admin') {
-    window.location.href = '/index.html';
+    window.location.href = 'portal.html';
     return;
   }
 
@@ -165,7 +165,7 @@ async function init() {
 
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await API.post('/api/auth/logout');
-    window.location.href = '/login.html';
+    window.location.href = 'index.html';
   });
 
   await Promise.all([loadUploadsList(), loadUsers(), loadLogs()]);

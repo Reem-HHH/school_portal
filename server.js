@@ -14,9 +14,25 @@ const { attachUser } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DOCS = path.join(__dirname, 'docs');
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
+}
+
+const corsOrigin = process.env.CORS_ORIGIN;
+if (corsOrigin) {
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin === corsOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    }
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
 }
 
 app.use(express.json());
@@ -28,7 +44,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: corsOrigin ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   }
 }));
@@ -39,16 +55,16 @@ app.use('/api/uploads', uploadsRoutes);
 app.use('/api/audit', auditRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(DOCS));
 
 app.get('/admin', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  res.sendFile(path.join(DOCS, 'admin.html'));
 });
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   if (req.path.includes('.')) return next();
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(DOCS, 'portal.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {

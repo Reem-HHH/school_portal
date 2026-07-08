@@ -1,70 +1,78 @@
 # School Portal
 
-Minimal school portal. Admins upload schedules and grades as **images** or **Excel/CSV files**. All user actions are logged.
+Minimal school portal with admin uploads, user auth, and activity logging.
 
-## Run locally
+## Important: GitHub Pages vs live app
+
+**GitHub Pages can only show the frontend** (HTML/CSS). It cannot run the Node.js server, database, login, or file uploads.
+
+| Host | What works |
+|------|------------|
+| **Render** (recommended) | Everything — login, uploads, admin, database |
+| **GitHub Pages** | Frontend only — login needs a Render backend connected |
+
+## Run locally (full app)
 
 ```bash
 npm install
 npm start
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 — sign in with `admin@school.com` / `admin123`
 
-**Admin:** `admin@school.com` / `admin123`
+## Deploy online (recommended — full app)
 
-## Features
+1. Go to [render.com](https://render.com) and sign up
+2. **New → Blueprint** → connect this GitHub repo
+3. Render reads `render.yaml` and deploys automatically
+4. Use your Render URL (e.g. `https://school-portal-xxxx.onrender.com`) — **this is your live website**
 
-- Minimal black-and-white UI
-- Admin uploads for schedules and grades (image or spreadsheet)
-- Spreadsheet files are parsed and shown as tables; images are displayed directly
-- User login, registration (parent/student), admin user management
-- Activity log of every login, upload, and user change
+## GitHub Pages setup (frontend only)
 
-## Admin uploads
+If you want your GitHub Pages link to show the login page instead of the README:
 
-| Type | Image | Data file |
-|------|-------|-----------|
-| Schedule | JPG, PNG, WebP | CSV or Excel (first row = headers) |
-| Grades | JPG, PNG, WebP | CSV or Excel (first row = headers) |
+1. Go to your repo on GitHub → **Settings → Pages**
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**
+3. Push to `main` — the workflow deploys the `docs/` folder automatically
+4. Your site will be at `https://YOUR-USERNAME.github.io/school_portal/`
 
-Go to **Admin → Uploads** to publish content. Users see it under **Schedules** or **Grades** on the main portal.
+### Connect GitHub Pages to Render backend
 
-## Deploy online (Render — free tier)
+After deploying to Render, edit `docs/index.html` and set your Render URL:
 
-1. Push this repo to GitHub
-2. Go to [render.com](https://render.com) → **New → Blueprint**
-3. Connect the repo — Render reads `render.yaml` automatically
-4. Set a strong `ADMIN_PASSWORD` in the dashboard after deploy
-5. Your site will be at `https://your-app.onrender.com`
-
-The Render config mounts a **persistent disk** at `data/` so uploads and the database survive restarts.
-
-### Deploy with Docker (any host)
-
-```bash
-docker build -t school-portal .
-docker run -p 3000:3000 -v school-data:/app/data -e SESSION_SECRET=your-secret school-portal
+```html
+<meta name="api-base" content="https://YOUR-APP.onrender.com">
 ```
 
-## Environment variables
+Also set the same meta tag in `portal.html`, `register.html`, and `admin.html`.
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default 3000) |
-| `SESSION_SECRET` | Required in production |
-| `ADMIN_EMAIL` | First admin email |
-| `ADMIN_PASSWORD` | First admin password |
-| `NODE_ENV` | Set to `production` when deployed |
+On Render, add environment variable:
+
+```
+CORS_ORIGIN=https://YOUR-USERNAME.github.io
+```
+
+Then login from GitHub Pages will talk to your Render server.
+
+**Easier option:** skip GitHub Pages and just share your Render URL — everything works on one link.
+
+## Admin features
+
+- Upload schedules and grades as **images** or **Excel/CSV**
+- Manage users and roles
+- View activity log of all changes
+
+## Demo login
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@school.com | admin123 |
 
 ## Project structure
 
 ```
-server.js           Express server
-db/init.js          SQLite schema
-routes/             API routes
-lib/audit.js        Activity logging
-public/             Frontend pages
-data/               Database + uploads (auto-created)
-render.yaml         Render deployment config
+docs/           Website files (GitHub Pages + Express)
+server.js       Node.js server
+db/             SQLite database
+render.yaml     Render deployment config
 ```
