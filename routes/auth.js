@@ -7,64 +7,8 @@ const { dashboardPath } = require('../lib/rbac');
 
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
-  try {
-    const { email, password, fullName, role, grade, section } = req.body;
-
-    if (!email || !password || !fullName || !role) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const allowedRoles = ['parent', 'student'];
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ error: 'Registration is only available for parent and student roles' });
-    }
-
-    if (role === 'student' && (!grade || !section)) {
-      return res.status(400).json({ error: 'Grade and section are required for student accounts' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-
-    const existing = await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
-    if (existing) {
-      return res.status(409).json({ error: 'Email already registered' });
-    }
-
-    const hash = bcrypt.hashSync(password, 10);
-    const result = await db.run(
-      'INSERT INTO users (email, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
-      [email.toLowerCase().trim(), hash, fullName.trim(), role]
-    );
-
-    const user = await db.get(
-      'SELECT id, email, full_name, role FROM users WHERE id = ?',
-      [result.lastInsertRowid]
-    );
-
-    if (role === 'student') {
-      const activeVal = db.usePg ? true : 1;
-      await db.run(
-        `INSERT INTO students (name, grade, section, user_id, is_active)
-         VALUES (?, ?, ?, ?, ?)`,
-        [fullName.trim(), grade.trim(), section.trim(), user.id, activeVal]
-      );
-    }
-
-    req.session.user = user;
-    await logAction(req, {
-      action: 'user.register',
-      entityType: 'user',
-      entityId: user.id,
-      details: { email: user.email, role: user.role }
-    });
-
-    res.status(201).json({ user, dashboard: dashboardPath(user.role) });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.post('/register', (_req, res) => {
+  res.status(403).json({ error: 'Registration is disabled. Contact your administrator for an account.' });
 });
 
 router.post('/login', async (req, res) => {

@@ -30,7 +30,7 @@ The School Portal is a school management website with **role-based access contro
 - **Teachers** enter formative assessment grades (quizzes/exams) by subject and class, and view their personal teaching schedule.
 - **Students** see their profile, class timetable, and formative grades.
 - **Parents** see the same information for linked children (linked by an admin).
-- **Parents and students** can self-register; teachers and admins are created by an admin.
+- **All user accounts** (admin, teacher, parent, student) are created by an administrator.
 - All important actions are recorded in an **activity log**.
 
 ---
@@ -57,10 +57,7 @@ A sample teacher account is also seeded on first run:
 - **Online (Render):** Render may generate a **random** admin password. You must check the Render dashboard (see [Run online](#run-online-live-website) below) or set your own password in environment variables.
 - **Change the default password** after your first login in production by creating a new admin user and deleting the old one, or by setting `ADMIN_PASSWORD` in your environment before the first deploy.
 
-There is **no default teacher/parent/student account**. Those users either:
-
-- Register themselves at `/register.html`, or
-- Are created by an admin in the Admin panel.
+There is **no default teacher/parent/student account**. An admin creates those accounts in the Admin panel (Users tab).
 
 ---
 
@@ -250,7 +247,6 @@ After login you are taken to your **role dashboard** (admin, teacher, or student
 | Page | URL (local) | Who can access |
 |------|-------------|----------------|
 | Login | http://localhost:3000/index.html | Everyone |
-| Register | …/register.html | Everyone (parent/student only) |
 | Admin dashboard | …/dashboard-admin.html | Admin only |
 | Teacher dashboard | …/dashboard-teacher.html | Teacher only |
 | Student / parent dashboard | …/dashboard-student.html | Student and parent only |
@@ -264,15 +260,9 @@ After login you are taken to your **role dashboard** (admin, teacher, or student
 
 **Student / parent dashboard** tabs: Profile, Timetable, Grades (formative assessments). Parents with multiple children can switch between them.
 
-### Register a new account (parent or student)
+### Get an account
 
-1. Go to the login page.
-2. Click **Register**.
-3. Fill in name, email, password, and choose **Parent** or **Student**.
-4. For **Student**, also enter grade and section (e.g. `Grade 5`, `Section A`).
-5. Submit — you are logged in and taken to your dashboard.
-
-Teachers and additional admins must be created by an admin (see below). Parents must be linked to students by an admin (Students tab → edit student record).
+Self-registration is not available. Contact your school administrator to receive login credentials. Admins create all accounts in the Admin dashboard (see [Create a user](#create-a-user-admin-teacher-parent-student) below). Parents must be linked to students by an admin (Students tab → edit student record).
 
 ### Log out
 
@@ -527,7 +517,6 @@ Login: **admin@school.com** / **admin123**
 | Page | Path |
 |------|------|
 | Login | `/index.html` |
-| Register | `/register.html` |
 | Portal | `/portal.html` |
 | Admin | `/admin.html` |
 
