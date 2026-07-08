@@ -69,10 +69,10 @@ async function loadSchedule() {
 
 function wireDownloads() {
   document.getElementById('download-gradebook-btn')?.addEventListener('click', () => {
-    downloadCsv('/api/exports/grades', 'my-gradebook.csv').catch(err => showToast(err.message, 'error'));
+    downloadFile('/api/exports/grades', 'my-gradebook.xlsx').catch(err => showToast(err.message, 'error'));
   });
   document.getElementById('download-schedule-btn')?.addEventListener('click', () => {
-    downloadCsv('/api/exports/schedules', 'my-schedule.csv').catch(err => showToast(err.message, 'error'));
+    downloadFile('/api/exports/schedules', 'my-schedule.xlsx').catch(err => showToast(err.message, 'error'));
   });
   wireSampleDataPanel('panel-data');
 }

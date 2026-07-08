@@ -61,19 +61,19 @@ const translations = {
     score: 'Score',
     outOf: 'Out of',
     saveGrades: 'Save grades',
-    downloadGradebook: 'Download gradebook (CSV)',
-    downloadSchedule: 'Download schedule (CSV)',
-    downloadStudents: 'Download students (CSV)',
-    downloadTeachers: 'Download teachers (CSV)',
-    downloadGrades: 'Download grades (CSV)',
-    downloadSchedules: 'Download class schedules (CSV)',
+    downloadGradebook: 'Download gradebook (Excel)',
+    downloadSchedule: 'Download schedule (Excel)',
+    downloadStudents: 'Download students (Excel)',
+    downloadTeachers: 'Download teachers (Excel)',
+    downloadGrades: 'Download grades (Excel)',
+    downloadSchedules: 'Download class schedules (Excel)',
     previewStudents: 'Preview students',
     previewTeachers: 'Preview teachers',
     previewGrades: 'Preview grades',
     previewSchedules: 'Preview schedules',
     sampleDataTitle: 'Sample data',
-    sampleDataDesc: 'Preview sample CSV data in your browser, then download when ready.',
-    samplePreviewHint: 'Click Preview to view a file below. Use Download to save it as CSV.',
+    sampleDataDesc: 'Preview sample data in your browser, then download a branded Excel file when ready.',
+    samplePreviewHint: 'Click Preview to view data below. Use Download to save a branded Excel file.',
     loadingPreview: 'Loading preview…',
     previewEmpty: 'No rows to display.',
     previewFailed: 'Preview failed',
@@ -209,19 +209,19 @@ const translations = {
     score: 'الدرجة',
     outOf: 'من',
     saveGrades: 'حفظ الدرجات',
-    downloadGradebook: 'تحميل سجل الدرجات (CSV)',
-    downloadSchedule: 'تحميل الجدول (CSV)',
-    downloadStudents: 'تحميل الطلاب (CSV)',
-    downloadTeachers: 'تحميل المعلمين (CSV)',
-    downloadGrades: 'تحميل الدرجات (CSV)',
-    downloadSchedules: 'تحميل جداول الصفوف (CSV)',
+    downloadGradebook: 'تحميل سجل الدرجات (Excel)',
+    downloadSchedule: 'تحميل الجدول (Excel)',
+    downloadStudents: 'تحميل الطلاب (Excel)',
+    downloadTeachers: 'تحميل المعلمين (Excel)',
+    downloadGrades: 'تحميل الدرجات (Excel)',
+    downloadSchedules: 'تحميل جداول الصفوف (Excel)',
     previewStudents: 'معاينة الطلاب',
     previewTeachers: 'معاينة المعلمين',
     previewGrades: 'معاينة الدرجات',
     previewSchedules: 'معاينة الجداول',
     sampleDataTitle: 'البيانات التجريبية',
-    sampleDataDesc: 'اعرض ملفات CSV التجريبية في المتصفح، ثم حمّلها عند الحاجة.',
-    samplePreviewHint: 'اضغط معاينة لعرض الملف أدناه. استخدم تحميل لحفظه كملف CSV.',
+    sampleDataDesc: 'اعرض البيانات التجريبية في المتصفح، ثم حمّل ملف Excel بالهوية البصرية للمدرسة.',
+    samplePreviewHint: 'اضغط معاينة لعرض البيانات أدناه. استخدم تحميل لحفظ ملف Excel بالهوية البصرية.',
     loadingPreview: 'جاري تحميل المعاينة…',
     previewEmpty: 'لا توجد صفوف للعرض.',
     previewFailed: 'فشلت المعاينة',
@@ -364,7 +364,7 @@ function initLanguageToggle() {
   });
 }
 
-function downloadCsv(url, filename) {
+function downloadFile(url, filename) {
   return fetch((window.APP_CONFIG?.apiBase || '') + url, { credentials: 'include' })
     .then(res => {
       if (!res.ok) throw new Error('Download failed');
@@ -377,6 +377,10 @@ function downloadCsv(url, filename) {
       a.click();
       URL.revokeObjectURL(a.href);
     });
+}
+
+function downloadCsv(url, filename) {
+  return downloadFile(url, filename);
 }
 
 function parseCsv(text) {
@@ -446,7 +450,7 @@ async function previewSampleCsv(type, panelId) {
   });
 
   try {
-    const res = await fetch((window.APP_CONFIG?.apiBase || '') + `/api/exports/${type}`, { credentials: 'include' });
+    const res = await fetch((window.APP_CONFIG?.apiBase || '') + `/api/exports/${type}?format=csv`, { credentials: 'include' });
     if (!res.ok) throw new Error(t('previewFailed') || 'Preview failed');
     const rows = parseCsv(await res.text());
     if (!rows.length) {
@@ -479,7 +483,7 @@ function wireSampleDataPanel(panelId) {
     const downloadBtn = e.target.closest('[data-download]');
     if (downloadBtn && panel.contains(downloadBtn)) {
       const type = downloadBtn.dataset.download;
-      downloadCsv(`/api/exports/${type}`, `${type}.csv`).catch(err => showToast(err.message, 'error'));
+      downloadFile(`/api/exports/${type}`, `${type}.xlsx`).catch(err => showToast(err.message, 'error'));
     }
   });
 }
