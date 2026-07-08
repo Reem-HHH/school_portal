@@ -2,8 +2,9 @@ services:
   - type: web
     name: school-portal
     runtime: node
+    runtimeVersion: "20"
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev
     startCommand: npm start
     healthCheckPath: /index.html
     envVars:

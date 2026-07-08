@@ -70,7 +70,7 @@ Use this when developing or testing on your own machine.
 
 ### Requirements
 
-- **Node.js** version 18 or higher  
+- **Node.js** version 20 (recommended; see `.node-version`)  
   Check if installed: open Terminal and run:
   ```bash
   node -v

@@ -71,7 +71,14 @@ async function initDb() {
 
     await pool.query(RBAC_SCHEMA);
   } else {
-    const Database = require('better-sqlite3');
+    let Database;
+    try {
+      Database = require('better-sqlite3');
+    } catch {
+      throw new Error(
+        'Local SQLite requires the better-sqlite3 dev dependency. Run npm install, or set DATABASE_URL for PostgreSQL.'
+      );
+    }
     const path = require('path');
     const fs = require('fs');
     const dataDir = path.join(__dirname, '..', 'data');
