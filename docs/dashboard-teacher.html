@@ -43,7 +43,9 @@
       <div class="card form-grid form-grid-3 mb-1">
         <div class="form-row">
           <label data-i18n="class">Class</label>
-          <select id="class-select"></select>
+          <select id="class-select">
+            <option value="" data-i18n="selectClass">Select class</option>
+          </select>
         </div>
         <div class="form-row">
           <label data-i18n="assessmentType">Assessment type</label>
@@ -91,9 +93,8 @@
           <button class="btn btn-outline" data-download="schedules" data-i18n="downloadSchedules">Download schedule (CSV)</button>
         </div>
       </div>
-      <div data-sample-preview-wrap class="section-hidden sample-preview-wrap">
+      <div data-sample-preview-wrap class="sample-preview-wrap">
         <h3 data-sample-preview-title></h3>
-        <p class="muted sample-preview-hint" data-i18n="samplePreviewHint">Click Preview to view a file below. Use Download to save it as CSV.</p>
         <div data-sample-preview class="data-table-wrap"></div>
       </div>
     </div>

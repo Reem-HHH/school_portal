@@ -480,6 +480,24 @@ th {
   background: var(--surface-muted);
 }
 
+.empty-prompt {
+  color: var(--moe-red);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  padding: 1.25rem 1rem;
+  margin: 0;
+}
+
+td.empty-prompt {
+  padding: 1.5rem 1rem;
+  vertical-align: middle;
+}
+
+.data-table-wrap .empty-prompt {
+  padding: 1.5rem 1rem;
+}
+
 .toast {
   position: fixed;
   top: max(1rem, env(safe-area-inset-top));

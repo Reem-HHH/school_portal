@@ -52,6 +52,14 @@ function wireAutoApply(ids, applyFn) {
   });
 }
 
+function studentFiltersReady() {
+  return !!(document.getElementById('filter-grade')?.value && document.getElementById('filter-section')?.value);
+}
+
+function gradebookFiltersReady() {
+  return !!(document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value);
+}
+
 async function uploadContent(form, contentType) {
   const fd = new FormData(form);
   fd.append('contentType', contentType);
@@ -136,7 +144,18 @@ async function loadTeachers() {
     </div>`).join('') || `<p class="muted">${t('noTeachers')}</p>`;
 }
 
+function clearStudentsTable() {
+  studentsCache = [];
+  document.getElementById('students-table').innerHTML =
+    emptyTablePrompt(5, 'selectGradeSectionStudentsHint');
+}
+
 function renderStudents() {
+  if (!studentFiltersReady()) {
+    clearStudentsTable();
+    return;
+  }
+
   const sortKey = document.getElementById('students-sort')?.value || 'name-asc';
   const students = sortItems(studentsCache, sortKey, {
     'name-asc': s => s.name,
@@ -156,27 +175,23 @@ function renderStudents() {
 }
 
 async function loadStudents() {
-  let url = '/api/students';
   const grade = document.getElementById('filter-grade')?.value || '';
   const section = document.getElementById('filter-section')?.value || '';
-  const params = new URLSearchParams();
-  if (grade) params.set('grade', grade);
-  if (section) params.set('section', section);
-  if (params.toString()) url += '?' + params.toString();
 
-  const { students } = await API.get(url);
+  if (!grade || !section) {
+    clearStudentsTable();
+    return;
+  }
+
+  const params = new URLSearchParams({ grade, section });
+  const { students } = await API.get('/api/students?' + params.toString());
   studentsCache = students;
   renderStudents();
 }
 
-function clearMasterGradebook(message) {
+function clearMasterGradebook(messageKey = 'selectGradeSectionHint') {
   gradebookCache = [];
-  document.getElementById('gradebook-table').innerHTML =
-    `<tr><td colspan="6" class="muted">${escapeHtml(message || t('selectGradeSectionHint'))}</td></tr>`;
-}
-
-function gradebookFiltersReady() {
-  return !!(document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value);
+  document.getElementById('gradebook-table').innerHTML = emptyTablePrompt(6, messageKey);
 }
 
 function renderMasterGradebook() {
@@ -233,16 +248,14 @@ async function loadFilters() {
   ['filter-grade', 'gb-grade'].forEach(id => {
     const el = document.getElementById(id);
     const saved = id === 'filter-grade' ? gradeVal : gbGradeVal;
-    const placeholder = id === 'gb-grade' ? t('selectGrade') : t('allGrades');
-    el.innerHTML = `<option value="">${placeholder}</option>` + grades.map(g =>
+    el.innerHTML = `<option value="">${t('selectGrade')}</option>` + grades.map(g =>
       `<option${g === saved ? ' selected' : ''}>${g}</option>`
     ).join('');
   });
   ['filter-section', 'gb-section'].forEach(id => {
     const el = document.getElementById(id);
     const saved = id === 'filter-section' ? sectionVal : gbSectionVal;
-    const placeholder = id === 'gb-section' ? t('selectSection') : t('allSections');
-    el.innerHTML = `<option value="">${placeholder}</option>` + sections.map(s =>
+    el.innerHTML = `<option value="">${t('selectSection')}</option>` + sections.map(s =>
       `<option${s === saved ? ' selected' : ''}>${s}</option>`
     ).join('');
   });
@@ -286,15 +299,18 @@ async function init() {
     loadFilters();
     renderUsers();
     if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachers();
-    if (!document.getElementById('panel-students').classList.contains('section-hidden')) renderStudents();
+    if (!document.getElementById('panel-students').classList.contains('section-hidden')) {
+      if (studentFiltersReady()) renderStudents();
+      else clearStudentsTable();
+    }
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
-      if (gradebookFiltersReady()) {
-        renderMasterGradebook();
-      } else {
-        clearMasterGradebook();
-      }
+      if (gradebookFiltersReady()) renderMasterGradebook();
+      else clearMasterGradebook();
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
+    if (!document.getElementById('panel-sample').classList.contains('section-hidden')) {
+      resetSampleDataPreview('panel-sample');
+    }
     loadUploadsList();
   });
 
@@ -304,6 +320,7 @@ async function init() {
       if (tab.dataset.tab === 'teachers') loadTeachers();
       if (tab.dataset.tab === 'students') loadStudents();
       if (tab.dataset.tab === 'gradebook') loadMasterGradebook();
+      if (tab.dataset.tab === 'sample') resetSampleDataPreview('panel-sample');
       if (tab.dataset.tab === 'logs') loadLogs();
     });
   });
@@ -361,6 +378,7 @@ async function init() {
 
   wireDownloads();
   await loadFilters();
+  clearStudentsTable();
   clearMasterGradebook();
   await Promise.all([loadUsers(), loadUploadsList()]);
 }

@@ -86,8 +86,8 @@
     <div id="panel-students" class="tab-panel section-hidden">
       <h2 data-i18n="studentDirectory">Student directory</h2>
       <div class="table-toolbar">
-        <select id="filter-grade" class="input-field toolbar-select"><option value="" data-i18n="allGrades">All grades</option></select>
-        <select id="filter-section" class="input-field toolbar-select"><option value="" data-i18n="allSections">All sections</option></select>
+        <select id="filter-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
+        <select id="filter-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
         <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
         <select id="students-sort" class="input-field toolbar-select">
           <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
@@ -167,9 +167,8 @@
           <button class="btn btn-outline" data-download="schedules" data-i18n="downloadSchedules">Download class schedules (CSV)</button>
         </div>
       </div>
-      <div data-sample-preview-wrap class="section-hidden sample-preview-wrap">
+      <div data-sample-preview-wrap class="sample-preview-wrap">
         <h3 data-sample-preview-title></h3>
-        <p class="muted sample-preview-hint" data-i18n="samplePreviewHint">Click Preview to view a file below. Use Download to save it as CSV.</p>
         <div data-sample-preview class="data-table-wrap"></div>
       </div>
     </div>

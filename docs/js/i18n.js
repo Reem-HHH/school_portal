@@ -101,7 +101,12 @@ const translations = {
     allSections: 'All sections',
     selectGrade: 'Select grade',
     selectSection: 'Select section',
-    selectGradeSectionHint: 'Select a grade and section to view gradebook data.',
+    selectClass: 'Select class',
+    selectGradeSectionHint: 'Please select a grade and section above to view gradebook data.',
+    selectGradeSectionStudentsHint: 'Please select a grade and section above to view students in that class.',
+    selectClassGradebookHint: 'Please select a class above to view students and enter grades.',
+    selectSamplePreviewHint: 'Choose a dataset above and click Preview to view sample data here.',
+    selectChildHint: 'Please select a child above to view their timetable and grades.',
     subjectFilter: 'Subject filter',
     status: 'Status',
     active: 'Active',
@@ -249,7 +254,12 @@ const translations = {
     allSections: 'كل الشعب',
     selectGrade: 'اختر الصف',
     selectSection: 'اختر الشعبة',
-    selectGradeSectionHint: 'اختر الصف والشعبة لعرض بيانات سجل الدرجات.',
+    selectClass: 'اختر الصف',
+    selectGradeSectionHint: 'يرجى اختيار الصف والشعبة أعلاه لعرض بيانات سجل الدرجات.',
+    selectGradeSectionStudentsHint: 'يرجى اختيار الصف والشعبة أعلاه لعرض طلاب هذه الشعبة.',
+    selectClassGradebookHint: 'يرجى اختيار الصف أعلاه لعرض الطلاب وإدخال الدرجات.',
+    selectSamplePreviewHint: 'اختر مجموعة بيانات أعلاه واضغط معاينة لعرضها هنا.',
+    selectChildHint: 'يرجى اختيار ابن/ابنة أعلاه لعرض الجدول والدرجات.',
     subjectFilter: 'تصفية المادة',
     status: 'الحالة',
     active: 'نشط',
@@ -426,6 +436,27 @@ function parseCsv(text) {
   return rows.filter(r => r.some(cell => cell !== ''));
 }
 
+function emptyTablePrompt(colspan, messageKey) {
+  return `<tr><td colspan="${colspan}" class="empty-prompt">${escapeHtml(t(messageKey))}</td></tr>`;
+}
+
+function emptyPanelPrompt(messageKey) {
+  return `<p class="empty-prompt">${escapeHtml(t(messageKey))}</p>`;
+}
+
+function resetSampleDataPreview(panelId) {
+  const panel = document.getElementById(panelId);
+  const previewWrap = panel?.querySelector('[data-sample-preview-wrap]');
+  const previewTable = panel?.querySelector('[data-sample-preview]');
+  const previewTitle = panel?.querySelector('[data-sample-preview-title]');
+  if (!panel || !previewWrap || !previewTable) return;
+
+  previewWrap.classList.remove('section-hidden');
+  if (previewTitle) previewTitle.textContent = '';
+  previewTable.innerHTML = emptyPanelPrompt('selectSamplePreviewHint');
+  panel.querySelectorAll('[data-preview]').forEach(btn => btn.classList.remove('active'));
+}
+
 async function previewSampleCsv(type, panelId) {
   const panel = document.getElementById(panelId);
   const previewWrap = panel?.querySelector('[data-sample-preview-wrap]');
@@ -472,6 +503,8 @@ async function previewSampleCsv(type, panelId) {
 function wireSampleDataPanel(panelId) {
   const panel = document.getElementById(panelId);
   if (!panel) return;
+
+  resetSampleDataPreview(panelId);
 
   panel.addEventListener('click', (e) => {
     const previewBtn = e.target.closest('[data-preview]');

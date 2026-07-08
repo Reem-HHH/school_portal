@@ -12,21 +12,38 @@ function parseClassSelect(val) {
   return { subject, grade, section };
 }
 
+function clearTeacherGradebook() {
+  document.getElementById('gradebook-body').innerHTML =
+    emptyTablePrompt(3, 'selectClassGradebookHint');
+}
+
 async function loadAssignments() {
   const { assignments: list } = await API.get('/api/gradebook/assignments');
   assignments = list;
   const sel = document.getElementById('class-select');
-  sel.innerHTML = list.map(a =>
+  const saved = sel.value;
+  sel.innerHTML = `<option value="">${t('selectClass')}</option>` + list.map(a =>
     `<option value="${a.subject}|${a.grade}|${a.section}">${a.subject} — ${a.grade} ${a.section}</option>`
-  ).join('') || `<option value="">${t('noClasses')}</option>`;
-  if (list.length && !document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
+  ).join('');
+
+  if (saved && [...sel.options].some(opt => opt.value === saved)) {
+    sel.value = saved;
+  } else {
+    sel.value = '';
+  }
+
+  if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
     loadGradebook();
   }
 }
 
 async function loadGradebook() {
   const val = document.getElementById('class-select').value;
-  if (!val) return;
+  if (!val) {
+    clearTeacherGradebook();
+    return;
+  }
+
   const { subject, grade, section } = parseClassSelect(val);
 
   const { grades } = await API.get(
@@ -86,6 +103,9 @@ async function init() {
   onLanguageChange(() => {
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) loadAssignments();
     if (!document.getElementById('panel-schedule').classList.contains('section-hidden')) loadSchedule();
+    if (!document.getElementById('panel-data').classList.contains('section-hidden')) {
+      resetSampleDataPreview('panel-data');
+    }
   });
 
   document.querySelectorAll('.tab').forEach(tab => {
@@ -93,6 +113,7 @@ async function init() {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === 'schedule') loadSchedule();
       if (tab.dataset.tab === 'gradebook') loadGradebook();
+      if (tab.dataset.tab === 'data') resetSampleDataPreview('panel-data');
     });
   });
 
@@ -125,6 +146,7 @@ async function init() {
   });
 
   wireDownloads();
+  clearTeacherGradebook();
   await Promise.all([loadSchedule(), loadAssignments()]);
 }
 
