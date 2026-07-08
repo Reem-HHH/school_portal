@@ -27,12 +27,18 @@
 
   <main class="layout">
     <div class="tabs">
-      <button class="tab active" data-tab="gradebook" data-i18n="tabGradebook">Gradebook</button>
-      <button class="tab" data-tab="schedule" data-i18n="tabSchedule">My Schedule</button>
+      <button class="tab active" data-tab="schedule" data-i18n="tabSchedule">My Schedule</button>
+      <button class="tab" data-tab="gradebook" data-i18n="tabGradebook">Gradebook</button>
       <button class="tab" data-tab="data" data-i18n="tabSampleData">Sample Data</button>
     </div>
 
-    <div id="panel-gradebook" class="tab-panel">
+    <div id="panel-schedule" class="tab-panel">
+      <h2 data-i18n="mySchedule">My schedule</h2>
+      <div id="schedule-view" class="data-table-wrap"></div>
+      <button id="download-schedule-btn" class="btn btn-outline" style="margin-top:1rem" data-i18n="downloadSchedule">Download schedule (CSV)</button>
+    </div>
+
+    <div id="panel-gradebook" class="tab-panel section-hidden">
       <h2 data-i18n="formativeGradebook">Formative assessment gradebook</h2>
       <div class="card form-grid form-grid-3" style="margin-bottom:1rem">
         <div class="form-row">
@@ -66,12 +72,6 @@
         <button id="save-grades-btn" class="btn" data-i18n="saveGrades">Save grades</button>
         <button id="download-gradebook-btn" class="btn btn-outline" data-i18n="downloadGradebook">Download gradebook (CSV)</button>
       </div>
-    </div>
-
-    <div id="panel-schedule" class="tab-panel section-hidden">
-      <h2 data-i18n="mySchedule">My schedule</h2>
-      <div id="schedule-view" class="data-table-wrap"></div>
-      <button id="download-schedule-btn" class="btn btn-outline" style="margin-top:1rem" data-i18n="downloadSchedule">Download schedule (CSV)</button>
     </div>
 
     <div id="panel-data" class="tab-panel section-hidden">
