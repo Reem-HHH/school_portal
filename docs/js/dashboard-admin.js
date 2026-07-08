@@ -175,7 +175,16 @@ function clearMasterGradebook(message) {
     `<tr><td colspan="6" class="muted">${escapeHtml(message || t('selectGradeSectionHint'))}</td></tr>`;
 }
 
+function gradebookFiltersReady() {
+  return !!(document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value);
+}
+
 function renderMasterGradebook() {
+  if (!gradebookFiltersReady()) {
+    clearMasterGradebook();
+    return;
+  }
+
   const sortKey = document.getElementById('gradebook-sort')?.value || 'student-asc';
   const grades = sortItems(gradebookCache, sortKey, {
     'student-asc': g => g.student_name,
@@ -284,7 +293,7 @@ async function init() {
     if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachers();
     if (!document.getElementById('panel-students').classList.contains('section-hidden')) renderStudents();
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
-      if (document.getElementById('gb-grade')?.value && document.getElementById('gb-section')?.value) {
+      if (gradebookFiltersReady()) {
         renderMasterGradebook();
       } else {
         clearMasterGradebook();
@@ -299,7 +308,7 @@ async function init() {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === 'teachers') loadTeachers();
       if (tab.dataset.tab === 'students') loadStudents();
-      if (tab.dataset.tab === 'gradebook') clearMasterGradebook();
+      if (tab.dataset.tab === 'gradebook') loadMasterGradebook();
       if (tab.dataset.tab === 'logs') loadLogs();
     });
   });
@@ -357,6 +366,7 @@ async function init() {
 
   wireDownloads();
   await loadFilters();
+  clearMasterGradebook();
   await Promise.all([loadUsers(), loadUploadsList()]);
 }
 

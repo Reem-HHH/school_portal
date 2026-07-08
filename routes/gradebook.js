@@ -21,15 +21,19 @@ router.get('/', requireAuth, async (req, res) => {
     const { grade, section, subject, studentId, assessmentType } = req.query;
 
     if (user.role === 'admin') {
+      if (!grade || !section) {
+        return res.status(400).json({ error: 'grade and section are required' });
+      }
+
       let sql = `
         SELECT fg.*, s.name as student_name
         FROM formative_grades fg
         JOIN students s ON s.id = fg.student_id
         WHERE s.${activeClause}
+          AND fg.grade_level = ?
+          AND fg.section = ?
       `;
-      const params = [];
-      if (grade) { sql += ' AND fg.grade_level = ?'; params.push(grade); }
-      if (section) { sql += ' AND fg.section = ?'; params.push(section); }
+      const params = [grade, section];
       if (subject) { sql += ' AND fg.subject = ?'; params.push(subject); }
       if (assessmentType) { sql += ' AND fg.assessment_type = ?'; params.push(assessmentType); }
       sql += ' ORDER BY fg.grade_level, fg.section, fg.subject, s.name, fg.assessment_name';
