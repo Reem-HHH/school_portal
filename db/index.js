@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { RBAC_SCHEMA, RBAC_SCHEMA_SQLITE } = require('./rbac-schema');
 const { seedDummyData } = require('./dummy-data');
+const { migrateAssessments } = require('./migrate-assessments');
 
 const usePg = !!process.env.DATABASE_URL;
 let pool = null;
@@ -145,6 +146,7 @@ async function initDb() {
     sqlite.exec(RBAC_SCHEMA_SQLITE);
   }
 
+  await migrateAssessments({ get, all, run }, usePg);
   await seedAdmin();
   await seedDummyData({ get, all, run }, usePg);
 }

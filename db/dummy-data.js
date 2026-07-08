@@ -79,7 +79,23 @@ async function ensureClassSchedule(db, grade, section, day, timeSlot, subject) {
   }
 }
 
-async function ensureGrade(db, { studentId, teacherId, subject, gradeLevel, section, type, name, score, maxScore }) {
+async function ensureAssessment(db, { teacherId, subject, gradeLevel, section, type, name, maxScore, status = 'closed' }) {
+  let row = await db.get(`
+    SELECT id FROM assessments
+    WHERE subject = ? AND grade_level = ? AND section = ?
+      AND assessment_type = ? AND name = ?
+  `, [subject, gradeLevel, section, type, name]);
+  if (!row) {
+    const result = await db.run(`
+      INSERT INTO assessments (teacher_id, subject, grade_level, section, assessment_type, name, max_score, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [teacherId, subject, gradeLevel, section, type, name, maxScore, status]);
+    row = { id: result.lastInsertRowid };
+  }
+  return row;
+}
+
+async function ensureGrade(db, { studentId, teacherId, subject, gradeLevel, section, type, name, score, maxScore, assessmentId }) {
   const row = await db.get(`
     SELECT id FROM formative_grades
     WHERE student_id = ? AND subject = ? AND grade_level = ? AND section = ?
@@ -88,9 +104,9 @@ async function ensureGrade(db, { studentId, teacherId, subject, gradeLevel, sect
   if (!row) {
     await db.run(`
       INSERT INTO formative_grades
-        (student_id, teacher_id, subject, grade_level, section, assessment_type, assessment_name, score, max_score)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [studentId, teacherId, subject, gradeLevel, section, type, name, score, maxScore]);
+        (student_id, teacher_id, assessment_id, subject, grade_level, section, assessment_type, assessment_name, score, max_score)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [studentId, teacherId, assessmentId, subject, gradeLevel, section, type, name, score, maxScore]);
   }
 }
 
@@ -204,6 +220,15 @@ async function seedDummyData(db, usePg) {
     );
     const teacherId = ['Math', 'Science'].includes(sample.subject) ? teacher1.id : teacher2.id;
     const maxScore = sample.max || (sample.type === 'quiz' ? 20 : 100);
+    const assessment = await ensureAssessment(db, {
+      teacherId,
+      subject: sample.subject,
+      gradeLevel: sample.grade,
+      section: sample.section,
+      type: sample.type,
+      name: sample.name,
+      maxScore
+    });
     for (let i = 0; i < students.length; i++) {
       if (sample.scores[i] !== undefined) {
         await ensureGrade(db, {
@@ -215,7 +240,8 @@ async function seedDummyData(db, usePg) {
           type: sample.type,
           name: sample.name,
           score: sample.scores[i],
-          maxScore
+          maxScore,
+          assessmentId: assessment.id
         });
       }
     }
