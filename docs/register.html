@@ -4,12 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="api-base" content="">
-  <title>Register — School Portal</title>
+  <title>Register — Al Kharran Primary School</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <div class="auth-page">
     <div class="auth-box">
+      <div class="auth-brand">
+        <img src="images/moe-logo.svg" class="moe-logo" alt="UAE Ministry of Education">
+        <div class="school-brand">
+          <h1 style="margin:0;font-size:1.125rem" data-i18n="logo">Al Kharran Primary School</h1>
+          <p class="school-subtitle muted" data-i18n-subtitle>Al Kharran · Grades 1–4</p>
+        </div>
+      </div>
       <h1 data-i18n="register">Register</h1>
       <p class="muted" style="margin-bottom:1.5rem">Parent or student accounts only.</p>
 
@@ -35,11 +42,11 @@
         </div>
         <div id="student-fields" class="form-row section-hidden">
           <label for="grade">Grade</label>
-          <input id="grade" type="text" placeholder="e.g. Grade 5">
+          <input id="grade" type="text" placeholder="e.g. Grade 1" data-i18n-placeholder="gradePlaceholder">
         </div>
         <div id="section-fields" class="form-row section-hidden">
-          <label for="section">Section</label>
-          <input id="section" type="text" placeholder="e.g. Section A">
+          <label for="section" data-i18n="section">Section</label>
+          <input id="section" type="text" placeholder="e.g. Section A" data-i18n-placeholder="sectionPlaceholder">
         </div>
         <button type="submit" class="btn" data-i18n="createAccount">Create account</button>
       </form>

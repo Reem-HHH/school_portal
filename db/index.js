@@ -152,7 +152,7 @@ async function initDb() {
 async function seedAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@school.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const adminName = process.env.ADMIN_NAME || 'System Administrator';
+  const adminName = process.env.ADMIN_NAME || 'Al Kharran Primary School Administrator';
   const hash = bcrypt.hashSync(adminPassword, 10);
 
   const existing = await get('SELECT id FROM users WHERE email = ?', [adminEmail]);

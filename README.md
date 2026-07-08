@@ -1,4 +1,6 @@
-# School Portal
+# Al Kharran Primary School Portal
+
+School portal for **Al Kharran Primary School — Al Kharran** (Grades 1–4, Sections A–D).
 
 Minimal school portal with admin uploads, user auth, and activity logging.
 

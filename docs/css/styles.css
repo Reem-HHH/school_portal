@@ -48,6 +48,50 @@ a:hover { text-decoration: underline; }
   flex-wrap: wrap;
 }
 
+.brand-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.moe-logo {
+  height: 52px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.school-brand {
+  min-width: 0;
+}
+
+.school-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.auth-brand .moe-logo {
+  height: 44px;
+}
+
+html[dir="rtl"] .brand-bar,
+html[dir="rtl"] .auth-brand {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
 .logo {
   font-size: 1rem;
   font-weight: 600;

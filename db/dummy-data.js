@@ -1,5 +1,19 @@
 const bcrypt = require('bcryptjs');
 
+const GRADES = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4'];
+const SECTIONS = ['Section A', 'Section B', 'Section C', 'Section D'];
+
+const STUDENT_NAMES = [
+  'Ahmed Al-Mansouri', 'Fatima Hassan', 'Omar Khalid', 'Sara Mohammed',
+  'Mariam Nasser', 'Hassan Youssef', 'Layla Ibrahim', 'Youssef Ali',
+  'Noor Saleh', 'Zainab Farouk', 'Rashid Hamad', 'Dana Mahmoud',
+  'Tariq Saeed', 'Hessa Al-Kaabi', 'Khalid Al-Shamsi', 'Aisha Al-Mazrouei',
+  'Saeed Al-Nuaimi', 'Maha Al-Dhaheri', 'Hamad Al-Ketbi', 'Shamma Al-Falasi',
+  'Salem Al-Ali', 'Reem Al-Suwaidi', 'Faisal Al-Muhairi', 'Noura Al-Hashmi',
+  'Mohammed Al-Ahbabi', 'Latifa Al-Rumaithi', 'Abdullah Al-Mansoori', 'Moza Al-Darmaki',
+  'Ali Al-Mehairbi', 'Salama Al-Kaabi', 'Majid Al-Hosani', 'Amna Al-Shehhi'
+];
+
 async function ensureUser(db, { email, password, fullName, role }) {
   let user = await db.get('SELECT id FROM users WHERE email = ?', [email]);
   if (!user) {
@@ -80,11 +94,22 @@ async function ensureGrade(db, { studentId, teacherId, subject, gradeLevel, sect
   }
 }
 
+async function deactivateOutOfRangeGrades(db, usePg) {
+  const inactive = usePg ? false : 0;
+  const placeholders = GRADES.map(() => '?').join(', ');
+  await db.run(
+    `UPDATE students SET is_active = ? WHERE grade NOT IN (${placeholders})`,
+    [inactive, ...GRADES]
+  );
+}
+
 async function seedDummyData(db, usePg) {
+  await deactivateOutOfRangeGrades(db, usePg);
+
   const teacher1 = await ensureUser(db, {
     email: 'teacher@school.com',
     password: 'teacher123',
-    fullName: 'Mr. Ahmad',
+    fullName: 'Mr. Ahmad Al-Kharrani',
     role: 'teacher'
   });
 
@@ -102,110 +127,99 @@ async function seedDummyData(db, usePg) {
     role: 'parent'
   });
 
-  const students = [
-    { name: 'Ahmed Al-Mansouri', grade: 'Grade 5', section: 'Section A', parentUserId: parent.id },
-    { name: 'Fatima Hassan', grade: 'Grade 5', section: 'Section A' },
-    { name: 'Omar Khalid', grade: 'Grade 5', section: 'Section A' },
-    { name: 'Sara Mohammed', grade: 'Grade 5', section: 'Section A' },
-    { name: 'Mariam Nasser', grade: 'Grade 5', section: 'Section A' },
-    { name: 'Hassan Youssef', grade: 'Grade 5', section: 'Section A' },
-    { name: 'Layla Ibrahim', grade: 'Grade 6', section: 'Section B' },
-    { name: 'Youssef Ali', grade: 'Grade 6', section: 'Section B' },
-    { name: 'Noor Saleh', grade: 'Grade 6', section: 'Section B' },
-    { name: 'Zainab Farouk', grade: 'Grade 6', section: 'Section B' },
-    { name: 'Rashid Hamad', grade: 'Grade 6', section: 'Section A' },
-    { name: 'Dana Mahmoud', grade: 'Grade 6', section: 'Section A' },
-    { name: 'Tariq Saeed', grade: 'Grade 6', section: 'Section A' }
-  ];
-
-  const studentIds = {};
-  for (const s of students) {
-    const row = await ensureStudent(db, usePg, s);
-    studentIds[s.name] = row.id;
+  let nameIdx = 0;
+  for (const grade of GRADES) {
+    for (const section of SECTIONS) {
+      for (let i = 0; i < 2; i++) {
+        const name = STUDENT_NAMES[nameIdx % STUDENT_NAMES.length];
+        nameIdx++;
+        const parentId = (grade === 'Grade 1' && section === 'Section A' && i === 0) ? parent.id : null;
+        await ensureStudent(db, usePg, { name, grade, section, parentUserId: parentId });
+      }
+    }
   }
 
-  const assignments = [
-    [teacher1.id, 'Math', 'Grade 5', 'Section A'],
-    [teacher1.id, 'Science', 'Grade 5', 'Section A'],
-    [teacher1.id, 'Math', 'Grade 6', 'Section B'],
-    [teacher2.id, 'English', 'Grade 5', 'Section A'],
-    [teacher2.id, 'Arabic', 'Grade 5', 'Section A'],
-    [teacher2.id, 'Science', 'Grade 6', 'Section A']
+  const classScheduleTemplate = [
+    ['Sun', '8:00 - 8:45', 'Arabic'],
+    ['Sun', '9:00 - 9:45', 'Math'],
+    ['Mon', '8:00 - 8:45', 'English'],
+    ['Mon', '9:00 - 9:45', 'Science'],
+    ['Tue', '8:00 - 8:45', 'Math'],
+    ['Tue', '9:00 - 9:45', 'Islamic Studies'],
+    ['Wed', '8:00 - 8:45', 'Arabic'],
+    ['Wed', '9:00 - 9:45', 'English'],
+    ['Thu', '8:00 - 8:45', 'Science'],
+    ['Thu', '9:00 - 9:45', 'Math']
   ];
-  for (const [tid, subject, grade, section] of assignments) {
-    await ensureAssignment(db, tid, subject, grade, section);
+
+  for (const grade of GRADES) {
+    for (const section of SECTIONS) {
+      await ensureAssignment(db, teacher1.id, 'Math', grade, section);
+      await ensureAssignment(db, teacher1.id, 'Science', grade, section);
+      await ensureAssignment(db, teacher2.id, 'Arabic', grade, section);
+      await ensureAssignment(db, teacher2.id, 'English', grade, section);
+      for (const [day, time, subject] of classScheduleTemplate) {
+        await ensureClassSchedule(db, grade, section, day, time, subject);
+      }
+    }
   }
 
   const teacher1Slots = [
-    ['Sun', '8:00 - 8:45', 'Math'],
-    ['Mon', '9:00 - 9:45', 'Math'],
-    ['Tue', '10:00 - 10:45', 'Science'],
-    ['Wed', '8:00 - 8:45', 'Math'],
-    ['Thu', '9:00 - 9:45', 'Science']
+    ['Sun', '9:00 - 9:45', 'Math'],
+    ['Mon', '9:00 - 9:45', 'Science'],
+    ['Tue', '8:00 - 8:45', 'Math'],
+    ['Wed', '9:00 - 9:45', 'Science'],
+    ['Thu', '9:00 - 9:45', 'Math']
   ];
   for (const [day, time, subject] of teacher1Slots) {
     await ensureTeacherSchedule(db, teacher1.id, day, time, subject);
   }
 
   const teacher2Slots = [
-    ['Sun', '8:00 - 8:45', 'English'],
-    ['Mon', '8:00 - 8:45', 'Arabic'],
-    ['Tue', '9:00 - 9:45', 'English'],
-    ['Wed', '10:00 - 10:45', 'Arabic'],
-    ['Thu', '8:00 - 8:45', 'English']
+    ['Sun', '8:00 - 8:45', 'Arabic'],
+    ['Mon', '8:00 - 8:45', 'English'],
+    ['Tue', '9:00 - 9:45', 'Arabic'],
+    ['Wed', '8:00 - 8:45', 'English'],
+    ['Thu', '8:00 - 8:45', 'Arabic']
   ];
   for (const [day, time, subject] of teacher2Slots) {
     await ensureTeacherSchedule(db, teacher2.id, day, time, subject);
   }
 
-  const classSlots = [
-    ['Grade 5', 'Section A', 'Sun', '8:00 - 8:45', 'Math'],
-    ['Grade 5', 'Section A', 'Mon', '8:00 - 8:45', 'English'],
-    ['Grade 5', 'Section A', 'Tue', '8:00 - 8:45', 'Science'],
-    ['Grade 5', 'Section A', 'Wed', '8:00 - 8:45', 'Arabic'],
-    ['Grade 5', 'Section A', 'Thu', '8:00 - 8:45', 'Math'],
-    ['Grade 6', 'Section B', 'Sun', '9:00 - 9:45', 'Math'],
-    ['Grade 6', 'Section B', 'Mon', '9:00 - 9:45', 'English'],
-    ['Grade 6', 'Section B', 'Tue', '9:00 - 9:45', 'Science'],
-    ['Grade 6', 'Section A', 'Sun', '10:00 - 10:45', 'Science'],
-    ['Grade 6', 'Section A', 'Mon', '10:00 - 10:45', 'English'],
-    ['Grade 6', 'Section A', 'Wed', '10:00 - 10:45', 'Arabic']
-  ];
-  for (const [grade, section, day, time, subject] of classSlots) {
-    await ensureClassSchedule(db, grade, section, day, time, subject);
-  }
-
-  const grades = [
-    { student: 'Ahmed Al-Mansouri', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 5', section: 'Section A', type: 'quiz', name: 'Quiz 1', score: 18, max: 20 },
-    { student: 'Ahmed Al-Mansouri', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 5', section: 'Section A', type: 'exam', name: 'Midterm Exam', score: 88, max: 100 },
-    { student: 'Fatima Hassan', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 5', section: 'Section A', type: 'quiz', name: 'Quiz 1', score: 16, max: 20 },
-    { student: 'Fatima Hassan', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 5', section: 'Section A', type: 'exam', name: 'Midterm Exam', score: 92, max: 100 },
-    { student: 'Omar Khalid', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 5', section: 'Section A', type: 'quiz', name: 'Quiz 1', score: 14, max: 20 },
-    { student: 'Sara Mohammed', teacherId: teacher1.id, subject: 'Science', grade: 'Grade 5', section: 'Section A', type: 'assignment', name: 'Lab Report 1', score: 45, max: 50 },
-    { student: 'Mariam Nasser', teacherId: teacher2.id, subject: 'English', grade: 'Grade 5', section: 'Section A', type: 'quiz', name: 'Vocabulary Quiz', score: 19, max: 20 },
-    { student: 'Hassan Youssef', teacherId: teacher2.id, subject: 'Arabic', grade: 'Grade 5', section: 'Section A', type: 'exam', name: 'Reading Exam', score: 78, max: 100 },
-    { student: 'Layla Ibrahim', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 6', section: 'Section B', type: 'quiz', name: 'Quiz 2', score: 17, max: 20 },
-    { student: 'Youssef Ali', teacherId: teacher1.id, subject: 'Math', grade: 'Grade 6', section: 'Section B', type: 'exam', name: 'Unit Test', score: 85, max: 100 },
-    { student: 'Noor Saleh', teacherId: teacher2.id, subject: 'Science', grade: 'Grade 6', section: 'Section A', type: 'assignment', name: 'Project 1', score: 40, max: 50 },
-    { student: 'Rashid Hamad', teacherId: teacher2.id, subject: 'English', grade: 'Grade 6', section: 'Section A', type: 'quiz', name: 'Grammar Quiz', score: 15, max: 20 }
+  const sampleGrades = [
+    { grade: 'Grade 1', section: 'Section A', subject: 'Math', type: 'quiz', name: 'Quiz 1', scores: [18, 16] },
+    { grade: 'Grade 1', section: 'Section A', subject: 'Arabic', type: 'exam', name: 'Reading Test', scores: [88, 92] },
+    { grade: 'Grade 2', section: 'Section B', subject: 'Math', type: 'quiz', name: 'Quiz 1', scores: [17, 15] },
+    { grade: 'Grade 2', section: 'Section B', subject: 'English', type: 'assignment', name: 'Spelling', scores: [45, 48], max: 50 },
+    { grade: 'Grade 3', section: 'Section C', subject: 'Science', type: 'quiz', name: 'Unit 1 Quiz', scores: [19, 14], max: 20 },
+    { grade: 'Grade 3', section: 'Section C', subject: 'Math', type: 'exam', name: 'Midterm', scores: [85, 78] },
+    { grade: 'Grade 4', section: 'Section D', subject: 'English', type: 'exam', name: 'Midterm', scores: [90, 82] },
+    { grade: 'Grade 4', section: 'Section D', subject: 'Math', type: 'quiz', name: 'Quiz 2', scores: [16, 18], max: 20 }
   ];
 
-  for (const g of grades) {
-    const studentId = studentIds[g.student];
-    if (studentId) {
-      await ensureGrade(db, {
-        studentId,
-        teacherId: g.teacherId,
-        subject: g.subject,
-        gradeLevel: g.grade,
-        section: g.section,
-        type: g.type,
-        name: g.name,
-        score: g.score,
-        maxScore: g.max
-      });
+  for (const sample of sampleGrades) {
+    const students = await db.all(
+      'SELECT id FROM students WHERE grade = ? AND section = ? ORDER BY id LIMIT 2',
+      [sample.grade, sample.section]
+    );
+    const teacherId = ['Math', 'Science'].includes(sample.subject) ? teacher1.id : teacher2.id;
+    const maxScore = sample.max || (sample.type === 'quiz' ? 20 : 100);
+    for (let i = 0; i < students.length; i++) {
+      if (sample.scores[i] !== undefined) {
+        await ensureGrade(db, {
+          studentId: students[i].id,
+          teacherId,
+          subject: sample.subject,
+          gradeLevel: sample.grade,
+          section: sample.section,
+          type: sample.type,
+          name: sample.name,
+          score: sample.scores[i],
+          maxScore
+        });
+      }
     }
   }
 }
 
-module.exports = { seedDummyData };
+module.exports = { seedDummyData, GRADES, SECTIONS };

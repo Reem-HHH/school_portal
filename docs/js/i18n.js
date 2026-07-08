@@ -3,7 +3,9 @@ const langChangeListeners = [];
 
 const translations = {
   en: {
-    logo: 'School Portal',
+    logo: 'Al Kharran Primary School',
+    schoolSubtitle: 'Al Kharran · Grades 1–4',
+    moeLogoAlt: 'UAE Ministry of Education',
     adminDashboard: 'Admin Dashboard',
     teacherDashboard: 'Teacher Dashboard',
     studentPortal: 'Student Portal',
@@ -29,6 +31,8 @@ const translations = {
     hasAccount: 'Have an account?',
     grade: 'Grade',
     section: 'Section',
+    gradePlaceholder: 'e.g. Grade 1',
+    sectionPlaceholder: 'e.g. Section A',
     tabUsers: 'Users',
     tabTeachers: 'Teachers',
     tabStudents: 'Students',
@@ -119,7 +123,9 @@ const translations = {
     dayThu: 'Thu'
   },
   ar: {
-    logo: 'بوابة المدرسة',
+    logo: 'مدرسة الخران الابتدائية',
+    schoolSubtitle: 'الخران · الصفوف 1–4',
+    moeLogoAlt: 'وزارة التربية والتعليم',
     adminDashboard: 'لوحة الإدارة',
     teacherDashboard: 'لوحة المعلم',
     studentPortal: 'بوابة الطالب',
@@ -145,6 +151,8 @@ const translations = {
     hasAccount: 'لديك حساب؟',
     grade: 'الصف',
     section: 'الشعبة',
+    gradePlaceholder: 'مثال: Grade 1',
+    sectionPlaceholder: 'مثال: Section A',
     tabUsers: 'المستخدمون',
     tabTeachers: 'المعلمون',
     tabStudents: 'الطلاب',
@@ -271,6 +279,16 @@ function setLanguage(lang) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (translations[lang][key]) el.placeholder = translations[lang][key];
   });
+
+  const subtitle = document.querySelector('[data-i18n-subtitle]');
+  if (subtitle && translations[lang].schoolSubtitle) {
+    subtitle.textContent = translations[lang].schoolSubtitle;
+  }
+
+  const moeLogo = document.querySelector('.moe-logo');
+  if (moeLogo && translations[lang].moeLogoAlt) {
+    moeLogo.alt = translations[lang].moeLogoAlt;
+  }
 
   document.querySelectorAll('option[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
