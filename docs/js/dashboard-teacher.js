@@ -263,6 +263,12 @@ async function init() {
   if (!currentUser) return;
   document.getElementById('user-label').textContent = currentUser.full_name;
 
+  const appConfig = await API.get('/api/config').catch(() => ({ showSampleData: false }));
+  if (!appConfig.showSampleData) {
+    document.getElementById('tab-sample-btn')?.classList.add('section-hidden');
+    document.getElementById('panel-data')?.classList.add('section-hidden');
+  }
+
   onLanguageChange(async () => {
     await loadAssignments();
     if (!document.getElementById('panel-schedule').classList.contains('section-hidden')) loadSchedule();

@@ -148,22 +148,29 @@ async function initDb() {
 
   await migrateAssessments({ get, all, run }, usePg);
   await seedAdmin();
-  await seedDummyData({ get, all, run }, usePg);
+
+  const seedDemo = process.env.SEED_DEMO_DATA === 'true'
+    || (process.env.NODE_ENV !== 'production' && process.env.SEED_DEMO_DATA !== 'false');
+  if (seedDemo) {
+    await seedDummyData({ get, all, run }, usePg);
+  }
 }
 
 async function seedAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@school.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const adminName = process.env.ADMIN_NAME || 'Al Kharran Primary School Administrator';
-  const hash = bcrypt.hashSync(adminPassword, 10);
+  const syncPassword = process.env.ADMIN_SYNC_PASSWORD === 'true';
 
   const existing = await get('SELECT id FROM users WHERE email = ?', [adminEmail]);
   if (!existing) {
+    const hash = bcrypt.hashSync(adminPassword, 10);
     await run(
       'INSERT INTO users (email, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
       [adminEmail, hash, adminName, 'admin']
     );
-  } else {
+  } else if (syncPassword) {
+    const hash = bcrypt.hashSync(adminPassword, 10);
     await run('UPDATE users SET password_hash = ? WHERE email = ?', [hash, adminEmail]);
   }
 }

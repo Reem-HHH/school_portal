@@ -182,7 +182,33 @@ const translations = {
     dayMon: 'Mon',
     dayTue: 'Tue',
     dayWed: 'Wed',
-    dayThu: 'Thu'
+    dayThu: 'Thu',
+    tabSchedules: 'Schedules',
+    classSchedules: 'Class schedules',
+    classSchedulesDesc: 'Manage weekly timetables by grade and section.',
+    addScheduleEntry: 'Add entry',
+    noScheduleEntries: 'No schedule entries yet.',
+    day: 'Day',
+    resetPassword: 'Reset password',
+    enterNewPassword: 'Enter new password (min 6 characters)',
+    passwordMinLength: 'Password must be at least 6 characters',
+    passwordReset: 'Password reset',
+    save: 'Save',
+    deactivate: 'Deactivate',
+    activate: 'Activate',
+    ipAddress: 'IP address',
+    actionAuthLogin: 'Signed in',
+    actionAuthLogout: 'Signed out',
+    actionAuthLoginFailed: 'Failed sign-in',
+    actionUserCreate: 'User created',
+    actionUserUpdate: 'User updated',
+    actionUserDelete: 'User deleted',
+    actionUserPasswordReset: 'Password reset',
+    actionStudentCreate: 'Student added',
+    actionStudentUpdate: 'Student updated',
+    actionScheduleCreate: 'Schedule entry added',
+    actionScheduleUpdate: 'Schedule entry updated',
+    actionScheduleDelete: 'Schedule entry removed'
   },
   ar: {
     logo: 'مدرسة الخران الابتدائية',
@@ -364,15 +390,59 @@ const translations = {
     dayMon: 'الإثنين',
     dayTue: 'الثلاثاء',
     dayWed: 'الأربعاء',
-    dayThu: 'الخميس'
+    dayThu: 'الخميس',
+    tabSchedules: 'الجداول',
+    classSchedules: 'جداول الصفوف',
+    classSchedulesDesc: 'إدارة الجداول الأسبوعية حسب الصف والشعبة.',
+    addScheduleEntry: 'إضافة حصة',
+    noScheduleEntries: 'لا توجد حصص في الجدول بعد.',
+    day: 'اليوم',
+    resetPassword: 'إعادة تعيين كلمة المرور',
+    enterNewPassword: 'أدخل كلمة مرور جديدة (6 أحرف على الأقل)',
+    passwordMinLength: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
+    passwordReset: 'تم إعادة تعيين كلمة المرور',
+    save: 'حفظ',
+    deactivate: 'تعطيل',
+    activate: 'تفعيل',
+    ipAddress: 'عنوان IP',
+    actionAuthLogin: 'تسجيل دخول',
+    actionAuthLogout: 'تسجيل خروج',
+    actionAuthLoginFailed: 'فشل تسجيل الدخول',
+    actionUserCreate: 'إنشاء مستخدم',
+    actionUserUpdate: 'تحديث مستخدم',
+    actionUserDelete: 'حذف مستخدم',
+    actionUserPasswordReset: 'إعادة تعيين كلمة المرور',
+    actionStudentCreate: 'إضافة طالب',
+    actionStudentUpdate: 'تحديث طالب',
+    actionScheduleCreate: 'إضافة حصة للجدول',
+    actionScheduleUpdate: 'تحديث حصة',
+    actionScheduleDelete: 'حذف حصة'
   }
 };
 
 const dayKeys = { Sun: 'daySun', Mon: 'dayMon', Tue: 'dayTue', Wed: 'dayWed', Thu: 'dayThu' };
 const assessmentKeys = { quiz: 'quiz', exam: 'exam', assignment: 'assignment' };
+const actionKeys = {
+  'auth.login': 'actionAuthLogin',
+  'auth.logout': 'actionAuthLogout',
+  'auth.login_failed': 'actionAuthLoginFailed',
+  'user.create': 'actionUserCreate',
+  'user.update': 'actionUserUpdate',
+  'user.delete': 'actionUserDelete',
+  'user.password_reset': 'actionUserPasswordReset',
+  'student.create': 'actionStudentCreate',
+  'student.update': 'actionStudentUpdate',
+  'schedule.create': 'actionScheduleCreate',
+  'schedule.update': 'actionScheduleUpdate',
+  'schedule.delete': 'actionScheduleDelete'
+};
 
 function t(key) {
   return translations[currentLang][key] || translations.en[key] || key;
+}
+
+function tAction(action) {
+  return t(actionKeys[action] || action);
 }
 
 function tDay(day) {

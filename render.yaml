@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: npm install --omit=dev
     startCommand: npm start
-    healthCheckPath: /index.html
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,5 +16,7 @@ services:
         value: admin@school.com
       - key: ADMIN_PASSWORD
         value: admin123
+      - key: SEED_DEMO_DATA
+        value: "false"
       - key: DATABASE_URL
         sync: false

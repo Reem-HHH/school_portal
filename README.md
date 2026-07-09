@@ -4,7 +4,9 @@ School portal for **Al Kharran Primary School — Al Kharran** (Grades 1–4, Se
 
 Minimal school portal with admin-managed users, digital gradebook, and activity logging.
 
-**Full step-by-step guide:** see [USER_GUIDE.md](./USER_GUIDE.md) for local/online setup, logins, uploads, where files are stored, and troubleshooting.
+**Login credentials (production):** see [LOGIN_INFO.md](./LOGIN_INFO.md) — Render URL, admin email/password env vars, and password reset steps.
+
+**Full step-by-step guide:** see [USER_GUIDE.md](./USER_GUIDE.md) for local/online setup and troubleshooting.
 
 **Render MCP (deploy debugging):** see [RENDER_MCP_SETUP.md](./RENDER_MCP_SETUP.md) to connect Render MCP and set your workspace.
 
