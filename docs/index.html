@@ -19,8 +19,7 @@
         </div>
       </div>
       <h1 data-i18n="login">Sign in</h1>
-      <p class="muted mb-1">admin@school.com / admin123</p>
-      <p class="muted mb-1" data-i18n="teacherLoginHint">Teacher login: teacher@school.com / teacher123</p>
+      <p id="login-hints" class="muted mb-1 section-hidden"></p>
 
       <form id="login-form" class="card">
         <div class="form-row">
@@ -46,6 +45,14 @@
     showBackendNotice();
     initLanguageToggle();
     redirectIfAuthed();
+
+    API.get('/api/config').then(cfg => {
+      if (cfg.showLoginHints) {
+        const el = document.getElementById('login-hints');
+        el.classList.remove('section-hidden');
+        el.innerHTML = 'Admin: admin@school.com / admin123<br>Teacher: teacher@school.com / teacher123';
+      }
+    }).catch(() => {});
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();

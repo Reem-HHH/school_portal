@@ -31,7 +31,8 @@
       <button class="tab" data-tab="teachers" data-i18n="tabTeachers">Teachers</button>
       <button class="tab" data-tab="students" data-i18n="tabStudents">Students</button>
       <button class="tab" data-tab="gradebook" data-i18n="tabMasterGradebook">Master Gradebook</button>
-      <button class="tab" data-tab="sample" data-i18n="tabSampleData">Sample Data</button>
+      <button class="tab" data-tab="schedules" data-i18n="tabSchedules">Schedules</button>
+      <button class="tab" data-tab="sample" data-i18n="tabSampleData" id="tab-sample-btn">Sample Data</button>
       <button class="tab" data-tab="logs" data-i18n="tabLogs">Activity Log</button>
     </div>
 
@@ -160,8 +161,8 @@
       </div>
       <form id="create-student-form" class="card form-grid form-grid-3 mb-1">
         <div class="form-row"><label data-i18n="name">Full name</label><input id="stu-name" required></div>
-        <div class="form-row"><label data-i18n="grade">Grade</label><input id="stu-grade" placeholder="Grade 1" data-i18n-placeholder="gradePlaceholder" required></div>
-        <div class="form-row"><label data-i18n="section">Section</label><input id="stu-section" placeholder="Section A" data-i18n-placeholder="sectionPlaceholder" required></div>
+        <div class="form-row"><label data-i18n="grade">Grade</label><select id="stu-grade" required><option value="" data-i18n="selectGrade">Select grade</option></select></div>
+        <div class="form-row"><label data-i18n="section">Section</label><select id="stu-section" required><option value="" data-i18n="selectSection">Select section</option></select></div>
         <div class="align-end"><button type="submit" class="btn" data-i18n="addStudent">Add student</button></div>
       </form>
       <div class="data-table-wrap">
@@ -172,6 +173,7 @@
             <th data-i18n="section">Section</th>
             <th data-i18n="parent">Parent</th>
             <th data-i18n="linkedUser">Linked user</th>
+            <th></th>
           </tr></thead>
           <tbody id="students-table"></tbody>
         </table>
@@ -214,6 +216,31 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <div id="panel-schedules" class="tab-panel section-hidden">
+      <h2 data-i18n="classSchedules">Class schedules</h2>
+      <p class="muted mb-1" data-i18n="classSchedulesDesc">Manage weekly timetables by grade and section.</p>
+      <div class="table-toolbar">
+        <select id="sched-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
+        <select id="sched-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
+      </div>
+      <form id="create-schedule-form" class="card form-grid form-grid-3 mb-1 section-hidden">
+        <div class="form-row">
+          <label data-i18n="day">Day</label>
+          <select id="sched-day" required>
+            <option value="Sun">Sun</option>
+            <option value="Mon">Mon</option>
+            <option value="Tue">Tue</option>
+            <option value="Wed">Wed</option>
+            <option value="Thu">Thu</option>
+          </select>
+        </div>
+        <div class="form-row"><label data-i18n="time">Time</label><input id="sched-time" placeholder="8:00 - 8:45" required></div>
+        <div class="form-row"><label data-i18n="subject">Subject</label><input id="sched-subject" required></div>
+        <div class="align-end"><button type="submit" class="btn" data-i18n="addScheduleEntry">Add entry</button></div>
+      </form>
+      <div id="schedules-table" class="data-table-wrap"></div>
     </div>
 
     <div id="panel-sample" class="tab-panel section-hidden">
@@ -259,6 +286,7 @@
             <th>Time</th>
             <th data-i18n="name">Full name</th>
             <th>Action</th>
+            <th data-i18n="ipAddress">IP</th>
             <th>Details</th>
           </tr></thead>
           <tbody id="logs-table"></tbody>

@@ -6,6 +6,101 @@ let assignmentsCache = [];
 let teacherSubjectsCache = [];
 let logsCache = [];
 let adminActiveAssessmentId = null;
+let schedulesCache = [];
+let studentMeta = { grades: [], sections: [] };
+
+function scheduleFiltersReady() {
+  return !!(document.getElementById('sched-grade')?.value && document.getElementById('sched-section')?.value);
+}
+
+function clearSchedulesTable() {
+  schedulesCache = [];
+  document.getElementById('schedules-table').innerHTML =
+    emptyPanelPrompt('selectGradeSectionStudentsHint');
+  document.getElementById('create-schedule-form')?.classList.add('section-hidden');
+}
+
+function renderSchedules() {
+  if (!scheduleFiltersReady()) {
+    clearSchedulesTable();
+    return;
+  }
+
+  document.getElementById('create-schedule-form')?.classList.remove('section-hidden');
+
+  if (!schedulesCache.length) {
+    document.getElementById('schedules-table').innerHTML = `<p class="muted">${t('noScheduleEntries')}</p>`;
+    return;
+  }
+
+  document.getElementById('schedules-table').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>${t('day')}</th>
+        <th>${t('time')}</th>
+        <th>${t('subject')}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        ${schedulesCache.map(e => `
+          <tr>
+            <td>${escapeHtml(e.day)}</td>
+            <td>${escapeHtml(e.time_slot)}</td>
+            <td>${escapeHtml(e.subject)}</td>
+            <td><button class="btn btn-danger btn-inline" data-del-schedule="${e.id}">${t('delete')}</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  document.querySelectorAll('[data-del-schedule]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('delete') + '?')) return;
+      try {
+        await API.delete(`/api/schedules/${btn.dataset.delSchedule}`);
+        showToast(t('updated'));
+        loadSchedules();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
+}
+
+async function loadSchedules() {
+  const grade = document.getElementById('sched-grade')?.value || '';
+  const section = document.getElementById('sched-section')?.value || '';
+  if (!grade || !section) {
+    clearSchedulesTable();
+    return;
+  }
+  const { entries } = await API.get(
+    `/api/schedules/admin/class?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}`
+  );
+  schedulesCache = entries;
+  renderSchedules();
+}
+
+async function loadStudentMeta() {
+  const { grades, sections } = await API.get('/api/students/meta');
+  studentMeta = { grades, sections };
+  const gradeOpts = grades.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+  const sectionOpts = sections.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  document.getElementById('stu-grade').innerHTML = `<option value="">${t('selectGrade')}</option>` + gradeOpts;
+  document.getElementById('stu-section').innerHTML = `<option value="">${t('selectSection')}</option>` + sectionOpts;
+  ['sched-grade'].forEach(id => {
+    const el = document.getElementById(id);
+    const saved = el?.value || '';
+    if (el) el.innerHTML = `<option value="">${t('selectGrade')}</option>` + grades.map(g =>
+      `<option value="${escapeHtml(g)}"${g === saved ? ' selected' : ''}>${escapeHtml(g)}</option>`
+    ).join('');
+  });
+  ['sched-section'].forEach(id => {
+    const el = document.getElementById(id);
+    const saved = el?.value || '';
+    if (el) el.innerHTML = `<option value="">${t('selectSection')}</option>` + sections.map(s =>
+      `<option value="${escapeHtml(s)}"${s === saved ? ' selected' : ''}>${escapeHtml(s)}</option>`
+    ).join('');
+  });
+}
+
 
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -95,7 +190,10 @@ function renderUsers() {
         ${['admin','teacher','parent','student'].map(r => `<option value="${r}" ${u.role===r?'selected':''}>${r}</option>`).join('')}
       </select></td>
       <td><button data-toggle="${u.id}" data-active="${u.is_active}" ${u.id===currentUser.id?'disabled':''}>${u.is_active ? t('active') : t('inactive')}</button></td>
-      <td>${u.id !== currentUser.id ? `<button data-del="${u.id}" class="btn btn-danger">${t('delete')}</button>` : ''}</td>
+      <td>
+        ${u.id !== currentUser.id ? `<button data-reset-pw="${u.id}" class="btn btn-outline btn-inline">${t('resetPassword')}</button>` : ''}
+        ${u.id !== currentUser.id ? `<button data-del="${u.id}" class="btn btn-danger btn-inline">${t('delete')}</button>` : ''}
+      </td>
     </tr>`).join('');
 
   document.querySelectorAll('[data-user-id]').forEach(sel => {
@@ -116,6 +214,20 @@ function renderUsers() {
       if (!confirm(t('delete') + '?')) return;
       await API.delete(`/api/auth/users/${btn.dataset.del}`);
       loadUsers();
+    });
+  });
+  document.querySelectorAll('[data-reset-pw]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const password = prompt(t('enterNewPassword'));
+      if (!password) return;
+      if (password.length < 6) {
+        showToast(t('passwordMinLength'), 'error');
+        return;
+      }
+      try {
+        await API.patch(`/api/auth/users/${btn.dataset.resetPw}/password`, { password });
+        showToast(t('passwordReset'));
+      } catch (err) { showToast(err.message, 'error'); }
     });
   });
 }
@@ -227,7 +339,7 @@ async function loadTeachersTab() {
 function clearStudentsTable() {
   studentsCache = [];
   document.getElementById('students-table').innerHTML =
-    emptyTablePrompt(5, 'selectGradeSectionStudentsHint');
+    emptyTablePrompt(6, 'selectGradeSectionStudentsHint');
 }
 
 function renderStudents() {
@@ -246,12 +358,41 @@ function renderStudents() {
 
   document.getElementById('students-table').innerHTML = students.map(s => `
     <tr>
-      <td>${escapeHtml(s.name)}</td>
+      <td><input class="input-field" data-edit-name="${s.id}" value="${escapeHtml(s.name)}"></td>
       <td>${escapeHtml(s.grade)}</td>
       <td>${escapeHtml(s.section)}</td>
       <td><select class="input-field" data-link-parent="${s.id}">${userOptions('parent', s.parent_user_id)}</select></td>
       <td><select class="input-field" data-link-user="${s.id}">${userOptions('student', s.user_id)}</select></td>
-    </tr>`).join('') || `<tr><td colspan="5" class="muted">${t('noStudents')}</td></tr>`;
+      <td>
+        <button class="btn btn-outline btn-inline" data-save-student="${s.id}">${t('save')}</button>
+        <button class="btn btn-outline btn-inline" data-toggle-student="${s.id}" data-active="${s.is_active}">${s.is_active ? t('deactivate') : t('activate')}</button>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="6" class="muted">${t('noStudents')}</td></tr>`;
+
+  document.querySelectorAll('[data-save-student]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.saveStudent;
+      const name = document.querySelector(`[data-edit-name="${id}"]`)?.value?.trim();
+      if (!name) return;
+      try {
+        await API.patch(`/api/students/${id}`, { name });
+        showToast(t('updated'));
+        loadStudents();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
+
+  document.querySelectorAll('[data-toggle-student]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        await API.patch(`/api/students/${btn.dataset.toggleStudent}`, {
+          isActive: btn.dataset.active !== '1'
+        });
+        showToast(t('updated'));
+        loadStudents();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  });
 
   document.querySelectorAll('[data-link-parent]').forEach(sel => {
     sel.addEventListener('change', async () => {
@@ -456,7 +597,8 @@ function renderLogs() {
     <tr>
       <td class="muted">${formatDate(log.created_at)}</td>
       <td>${escapeHtml(log.user_name || log.user_email)}</td>
-      <td><code>${log.action}</code></td>
+      <td><code>${escapeHtml(tAction(log.action))}</code></td>
+      <td class="muted">${escapeHtml(log.ip_address || '—')}</td>
       <td class="log-details">${escapeHtml(JSON.stringify(log.details))}</td>
     </tr>`).join('');
 }
@@ -487,6 +629,10 @@ async function init() {
       else clearAdminGradebook();
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
+    if (!document.getElementById('panel-schedules').classList.contains('section-hidden')) {
+      if (scheduleFiltersReady()) renderSchedules();
+      else clearSchedulesTable();
+    }
     if (!document.getElementById('panel-sample').classList.contains('section-hidden')) {
       resetSampleDataPreview('panel-sample');
     }
@@ -501,6 +647,7 @@ async function init() {
         showAdminGradebookOverview();
         loadMasterGradebook();
       }
+      if (tab.dataset.tab === 'schedules') loadSchedules();
       if (tab.dataset.tab === 'sample') resetSampleDataPreview('panel-sample');
       if (tab.dataset.tab === 'logs') loadLogs();
     });
@@ -579,12 +726,36 @@ async function init() {
     } catch (err) { showToast(err.message, 'error'); }
   });
 
+  document.getElementById('create-schedule-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await API.post('/api/schedules/class', {
+        grade: document.getElementById('sched-grade').value,
+        section: document.getElementById('sched-section').value,
+        day: document.getElementById('sched-day').value,
+        timeSlot: document.getElementById('sched-time').value,
+        subject: document.getElementById('sched-subject').value
+      });
+      showToast(t('updated'));
+      e.target.reset();
+      loadSchedules();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  wireAutoApply(['sched-grade', 'sched-section'], loadSchedules);
+
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await API.post('/api/auth/logout');
     window.location.href = 'index.html';
   });
 
   wireSampleDataPanel('panel-sample');
+  const appConfig = await API.get('/api/config').catch(() => ({ showSampleData: false }));
+  if (!appConfig.showSampleData) {
+    document.getElementById('tab-sample-btn')?.classList.add('section-hidden');
+    document.getElementById('panel-sample')?.classList.add('section-hidden');
+  }
+  await loadStudentMeta();
   await loadFilters();
   clearStudentsTable();
   clearAdminGradebook();

@@ -2,8 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { loginLimiter } = require('../middleware/rate-limit');
 const { logAction } = require('../lib/audit');
 const { dashboardPath } = require('../lib/rbac');
+const { safeError } = require('../lib/errors');
 
 const router = express.Router();
 
@@ -11,7 +13,7 @@ router.post('/register', (_req, res) => {
   res.status(403).json({ error: 'Registration is disabled. Contact your administrator for an account.' });
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -51,7 +53,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ user: sessionUser, dashboard: dashboardPath(user.role) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -123,7 +125,7 @@ router.post('/users', requireAuth, requireRole('admin'), async (req, res) => {
 
     res.status(201).json({ user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -134,7 +136,7 @@ router.get('/users', requireAuth, requireRole('admin'), async (req, res) => {
     );
     res.json({ users });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -181,7 +183,37 @@ router.patch('/users/:id', requireAuth, requireRole('admin'), async (req, res) =
 
     res.json({ user: updated });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
+  }
+});
+
+router.patch('/users/:id/password', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const user = await db.get('SELECT id, email FROM users WHERE id = ?', [id]);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const hash = bcrypt.hashSync(password, 10);
+    await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, id]);
+
+    await logAction(req, {
+      action: 'user.password_reset',
+      entityType: 'user',
+      entityId: parseInt(id, 10),
+      details: { email: user.email }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -208,7 +240,7 @@ router.delete('/users/:id', requireAuth, requireRole('admin'), async (req, res) 
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
