@@ -7,6 +7,92 @@ const { verifyTeacherClass } = require('../lib/teacher-class');
 
 const router = express.Router();
 const activeClause = db.usePg ? 'is_active = true' : 'is_active = 1';
+const AT_RISK_THRESHOLD = 60;
+
+router.get('/school-summary', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const { grade: gradeFilter } = req.query;
+    const params = [];
+    let classSql = `
+      SELECT DISTINCT grade_level AS grade, section, subject
+      FROM assessments
+    `;
+    if (gradeFilter) {
+      classSql += ' WHERE grade_level = ?';
+      params.push(gradeFilter);
+    }
+    classSql += ' ORDER BY grade_level, section, subject';
+
+    const classes = await db.all(classSql, params);
+    const summary = [];
+
+    for (const cls of classes) {
+      const students = await db.all(`
+        SELECT id FROM students
+        WHERE grade = ? AND section = ? AND ${activeClause}
+      `, [cls.grade, cls.section]);
+
+      const assessments = await db.all(`
+        SELECT id, max_score FROM assessments
+        WHERE grade_level = ? AND section = ? AND subject = ?
+      `, [cls.grade, cls.section, cls.subject]);
+
+      const grades = await db.all(`
+        SELECT fg.student_id, fg.assessment_id, fg.score, fg.max_score
+        FROM formative_grades fg
+        JOIN students s ON s.id = fg.student_id
+        WHERE fg.grade_level = ? AND fg.section = ? AND fg.subject = ?
+          AND s.${activeClause}
+          AND fg.assessment_id IS NOT NULL
+      `, [cls.grade, cls.section, cls.subject]);
+
+      const studentCount = students.length;
+      const assessmentCount = assessments.length;
+      const totalCells = studentCount * assessmentCount;
+      const filledCells = grades.length;
+      const completionPct = totalCells ? Math.round((filledCells / totalCells) * 100) : 0;
+
+      let classAverage = null;
+      if (grades.length) {
+        const pctSum = grades.reduce((sum, g) => {
+          const max = g.max_score || 100;
+          return sum + (g.score / max) * 100;
+        }, 0);
+        classAverage = Math.round((pctSum / grades.length) * 10) / 10;
+      }
+
+      const studentPct = new Map();
+      grades.forEach(g => {
+        const max = g.max_score || 100;
+        const pct = (g.score / max) * 100;
+        const prev = studentPct.get(g.student_id) || { sum: 0, count: 0 };
+        prev.sum += pct;
+        prev.count += 1;
+        studentPct.set(g.student_id, prev);
+      });
+
+      let atRiskCount = 0;
+      studentPct.forEach(({ sum, count }) => {
+        if (count && (sum / count) < AT_RISK_THRESHOLD) atRiskCount += 1;
+      });
+
+      summary.push({
+        grade: cls.grade,
+        section: cls.section,
+        subject: cls.subject,
+        studentCount,
+        assessmentCount,
+        completionPct,
+        classAverage,
+        atRiskCount
+      });
+    }
+
+    res.json({ summary, atRiskThreshold: AT_RISK_THRESHOLD });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/class-view', requireAuth, requireRole('admin', 'teacher'), async (req, res) => {
   try {

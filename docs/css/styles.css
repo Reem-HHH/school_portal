@@ -958,3 +958,77 @@ html[dir="rtl"] .auth-school-title {
     transition-duration: 0.01ms !important;
   }
 }
+
+.timetable-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.timetable-grid th,
+.timetable-grid td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.timetable-time-col {
+  text-align: start !important;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--moe-gold-dark);
+  background: var(--moe-gold-light);
+  min-width: 7.5rem;
+}
+
+.timetable-break-row td {
+  background: #f3f4f6;
+}
+
+.timetable-break-label {
+  font-weight: 600;
+  color: var(--muted);
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.timetable-cell {
+  position: relative;
+  min-width: 5.5rem;
+}
+
+.timetable-subject {
+  display: block;
+}
+
+.timetable-empty {
+  color: var(--muted);
+}
+
+.timetable-del {
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.summary-table td,
+.summary-table th {
+  white-space: nowrap;
+}
+
+.at-risk-badge {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+  text-align: center;
+}
+
+html[dir="rtl"] .timetable-time-col {
+  text-align: end !important;
+}

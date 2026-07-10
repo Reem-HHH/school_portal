@@ -3,10 +3,36 @@ const db = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { logAction } = require('../lib/audit');
 const { canAccessStudent } = require('../lib/rbac');
-const { DAYS, isValidGrade, isValidSection, isValidDay } = require('../lib/validation');
+const { isValidGrade, isValidSection, isValidDay } = require('../lib/validation');
+const {
+  DAYS,
+  LESSON_SLOTS,
+  getTimetableRows,
+  normalizeTimeSlot,
+  isValidLessonSlot,
+  normalizeScheduleEntries
+} = require('../lib/schedule-constants');
 const { safeError } = require('../lib/errors');
 
 const router = express.Router();
+
+function schedulePayload(entries, extra = {}) {
+  return {
+    days: DAYS,
+    lessonSlots: LESSON_SLOTS,
+    rows: getTimetableRows(),
+    entries: normalizeScheduleEntries(entries),
+    ...extra
+  };
+}
+
+router.get('/meta', requireAuth, (req, res) => {
+  res.json({
+    days: DAYS,
+    lessonSlots: LESSON_SLOTS,
+    rows: getTimetableRows()
+  });
+});
 
 router.get('/teacher', requireAuth, async (req, res) => {
   try {
@@ -24,7 +50,7 @@ router.get('/teacher', requireAuth, async (req, res) => {
       [teacherId]
     );
 
-    res.json({ days: DAYS, entries });
+    res.json(schedulePayload(entries));
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }
@@ -37,7 +63,7 @@ router.get('/class', requireAuth, async (req, res) => {
 
     if (user.role === 'student') {
       const me = await db.get('SELECT grade, section FROM students WHERE user_id = ?', [user.id]);
-      if (!me) return res.json({ days: DAYS, entries: [] });
+      if (!me) return res.json(schedulePayload([]));
       grade = me.grade;
       section = me.section;
     } else if (user.role === 'parent') {
@@ -59,7 +85,7 @@ router.get('/class', requireAuth, async (req, res) => {
       [grade, section]
     );
 
-    res.json({ days: DAYS, entries, grade, section });
+    res.json(schedulePayload(entries, { grade, section }));
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }
@@ -77,7 +103,7 @@ router.get('/admin/class', requireAuth, requireRole('admin'), async (req, res) =
       [grade, section]
     );
 
-    res.json({ days: DAYS, entries, grade, section });
+    res.json(schedulePayload(entries, { grade, section }));
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }
@@ -93,21 +119,25 @@ router.post('/class', requireAuth, requireRole('admin'), async (req, res) => {
     if (!isValidGrade(grade) || !isValidSection(section) || !isValidDay(day)) {
       return res.status(400).json({ error: 'Invalid grade, section, or day' });
     }
+    const normalizedSlot = normalizeTimeSlot(timeSlot);
+    if (!isValidLessonSlot(normalizedSlot)) {
+      return res.status(400).json({ error: 'Invalid time slot. Use a standard lesson period.' });
+    }
 
     const result = await db.run(
       'INSERT INTO schedule_entries (grade, section, day, time_slot, subject) VALUES (?, ?, ?, ?, ?)',
-      [grade, section, day, timeSlot.trim(), subject.trim()]
+      [grade, section, day, normalizedSlot, subject.trim()]
     );
 
     await logAction(req, {
       action: 'schedule.create',
       entityType: 'schedule',
       entityId: result.lastInsertRowid,
-      details: { grade, section, day, timeSlot, subject }
+      details: { grade, section, day, timeSlot: normalizedSlot, subject }
     });
 
     const entry = await db.get('SELECT id, day, time_slot, subject FROM schedule_entries WHERE id = ?', [result.lastInsertRowid]);
-    res.status(201).json({ entry });
+    res.status(201).json({ entry: { ...entry, time_slot: normalizeTimeSlot(entry.time_slot) } });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }
@@ -122,9 +152,15 @@ router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
     if (day && !isValidDay(day)) {
       return res.status(400).json({ error: 'Invalid day' });
     }
+    if (timeSlot) {
+      const normalizedSlot = normalizeTimeSlot(timeSlot);
+      if (!isValidLessonSlot(normalizedSlot)) {
+        return res.status(400).json({ error: 'Invalid time slot. Use a standard lesson period.' });
+      }
+      await db.run('UPDATE schedule_entries SET time_slot = ? WHERE id = ?', [normalizedSlot, req.params.id]);
+    }
 
     if (day) await db.run('UPDATE schedule_entries SET day = ? WHERE id = ?', [day, req.params.id]);
-    if (timeSlot) await db.run('UPDATE schedule_entries SET time_slot = ? WHERE id = ?', [timeSlot.trim(), req.params.id]);
     if (subject) await db.run('UPDATE schedule_entries SET subject = ? WHERE id = ?', [subject.trim(), req.params.id]);
 
     const entry = await db.get('SELECT id, grade, section, day, time_slot, subject FROM schedule_entries WHERE id = ?', [req.params.id]);
@@ -136,7 +172,7 @@ router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
       details: entry
     });
 
-    res.json({ entry });
+    res.json({ entry: { ...entry, time_slot: normalizeTimeSlot(entry.time_slot) } });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }

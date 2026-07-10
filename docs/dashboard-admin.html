@@ -214,40 +214,59 @@
       </div>
     </div>
 
-    <div id="panel-gradebook" class="tab-panel section-hidden">
-      <div id="admin-gradebook-overview">
-        <h2 data-i18n="masterGradebook">Master gradebook</h2>
-        <div class="card form-grid form-grid-3 mb-1">
-          <div class="form-row">
-            <label data-i18n="grade">Grade</label>
-            <select id="gb-grade"><option value="" data-i18n="selectGrade">Select grade</option></select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="section">Section</label>
-            <select id="gb-section"><option value="" data-i18n="selectSection">Select section</option></select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="subject">Subject</label>
-            <select id="gb-subject"><option value="" data-i18n="selectSubject">Select subject</option></select>
-          </div>
+    <div id="panel-gradebook" class="tab-panel topic-panel section-hidden">
+      <nav class="sub-tabs" data-sub-tabs="gradebook" role="tablist" aria-label="Master Gradebook">
+        <button type="button" class="sub-tab active" data-sub-tab="summary" role="tab" aria-selected="true" data-i18n="subTabSchoolSummary">School summary</button>
+        <button type="button" class="sub-tab" data-sub-tab="matrix" role="tab" aria-selected="false" data-i18n="subTabClassMatrix">Class matrix</button>
+      </nav>
+
+      <div class="sub-tab-panel" data-sub-panel="summary">
+        <h2 data-i18n="schoolGradebookSummary">School gradebook summary</h2>
+        <p class="panel-lead" data-i18n="schoolGradebookSummaryDesc">Overview of formative assessment progress across all classes.</p>
+        <div class="table-toolbar">
+          <select id="gb-summary-grade" class="input-field toolbar-select">
+            <option value="" data-i18n="allGrades">All grades</option>
+          </select>
+          <button id="download-admin-gradebook-btn" type="button" class="btn btn-outline" data-i18n="downloadGradebook">Download gradebook (Excel)</button>
         </div>
-        <div id="admin-gradebook-matrix" class="data-table-wrap"></div>
+        <div id="admin-gradebook-summary" class="data-table-wrap"></div>
       </div>
-      <div id="admin-gradebook-marking" class="section-hidden">
-        <div class="actions-row mb-1">
-          <button id="admin-back-gradebook" class="btn btn-outline" data-i18n="backToGradebook">Back to gradebook</button>
+
+      <div class="sub-tab-panel section-hidden" data-sub-panel="matrix">
+        <div id="admin-gradebook-overview">
+          <h2 data-i18n="masterGradebook">Master gradebook</h2>
+          <div class="card form-grid form-grid-3 mb-1">
+            <div class="form-row">
+              <label data-i18n="grade">Grade</label>
+              <select id="gb-grade"><option value="" data-i18n="selectGrade">Select grade</option></select>
+            </div>
+            <div class="form-row">
+              <label data-i18n="section">Section</label>
+              <select id="gb-section"><option value="" data-i18n="selectSection">Select section</option></select>
+            </div>
+            <div class="form-row">
+              <label data-i18n="subject">Subject</label>
+              <select id="gb-subject"><option value="" data-i18n="selectSubject">Select subject</option></select>
+            </div>
+          </div>
+          <div id="admin-gradebook-matrix" class="data-table-wrap"></div>
         </div>
-        <h2 id="admin-marking-title" data-i18n="markStudents">Mark students</h2>
-        <p id="admin-marking-meta" class="muted mb-1"></p>
-        <div class="data-table-wrap">
-          <table>
-            <thead><tr>
-              <th data-i18n="student">Student</th>
-              <th data-i18n="score">Score</th>
-              <th data-i18n="outOf">Out of</th>
-            </tr></thead>
-            <tbody id="admin-marking-body"></tbody>
-          </table>
+        <div id="admin-gradebook-marking" class="section-hidden">
+          <div class="actions-row mb-1">
+            <button id="admin-back-gradebook" class="btn btn-outline" data-i18n="backToGradebook">Back to gradebook</button>
+          </div>
+          <h2 id="admin-marking-title" data-i18n="markStudents">Mark students</h2>
+          <p id="admin-marking-meta" class="muted mb-1"></p>
+          <div class="data-table-wrap">
+            <table>
+              <thead><tr>
+                <th data-i18n="student">Student</th>
+                <th data-i18n="score">Score</th>
+                <th data-i18n="outOf">Out of</th>
+              </tr></thead>
+              <tbody id="admin-marking-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -290,7 +309,7 @@
               <option value="Thu">Thu</option>
             </select>
           </div>
-          <div class="form-row"><label data-i18n="time">Time</label><input id="sched-time" placeholder="8:00 - 8:45" required></div>
+          <div class="form-row"><label data-i18n="time">Time</label><select id="sched-time" required><option value="" data-i18n="selectTimeSlot">Select period</option></select></div>
           <div class="form-row"><label data-i18n="subject">Subject</label><input id="sched-subject" required></div>
           <div class="align-end"><button type="submit" class="btn" data-i18n="addScheduleEntry">Add entry</button></div>
         </form>
@@ -353,6 +372,7 @@
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/sub-tabs.js"></script>
+  <script src="js/schedule-utils.js"></script>
   <script src="js/dashboard-admin.js"></script>
 </body>
 </html>
