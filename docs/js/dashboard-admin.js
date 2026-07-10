@@ -100,10 +100,16 @@ async function loadStudentMeta() {
 
 
 function showTab(name) {
-  document.querySelectorAll('.layout > .tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.layout > .main-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.layout > .tab-panel').forEach(p => p.classList.add('section-hidden'));
-  document.getElementById(`panel-${name}`)?.classList.remove('section-hidden');
-  onMainTabChange(name);
+  const panel = document.getElementById(`panel-${name}`);
+  panel?.classList.remove('section-hidden');
+  if (panel?.classList.contains('topic-panel')) {
+    restoreSubTabs(`panel-${name}`);
+    onTopicSubTabChange(name, getActiveSubTab(name));
+  } else {
+    onTopicPanelChange(name);
+  }
 }
 
 function isPanelVisible(id) {
@@ -111,16 +117,19 @@ function isPanelVisible(id) {
   return panel && !panel.classList.contains('section-hidden');
 }
 
-function onMainTabChange(name) {
-  if (name === 'users-directory') loadUsers();
-  if (name === 'students-directory') loadStudents();
-  if (name === 'teachers-assign') loadTeachersTab();
-  if (name === 'teachers-directory') {
+function onTopicSubTabChange(topic, subTab) {
+  if (topic === 'users' && subTab === 'directory') loadUsers();
+  if (topic === 'students' && subTab === 'directory') loadStudents();
+  if (topic === 'teachers' && subTab === 'assign') loadTeachersTab();
+  if (topic === 'teachers' && subTab === 'directory') {
     loadTeachersTab();
     loadAssignmentsList();
   }
-  if (name === 'schedules-directory') loadSchedules();
-  if (name === 'schedules-create') syncScheduleCreateFilters();
+  if (topic === 'schedules' && subTab === 'directory') loadSchedules();
+  if (topic === 'schedules' && subTab === 'create') syncScheduleCreateFilters();
+}
+
+function onTopicPanelChange(name) {
   if (name === 'gradebook') {
     showAdminGradebookOverview();
     loadMasterGradebook();
@@ -264,7 +273,7 @@ async function loadUsers() {
   const { users } = await API.get('/api/auth/users');
   usersCache = users;
   renderUsers();
-  if (isPanelVisible('panel-students-directory') && studentFiltersReady()) {
+  if (isPanelVisible('panel-students') && isSubTabActive('students', 'directory') && studentFiltersReady()) {
     renderStudents();
   }
 }
@@ -644,10 +653,10 @@ async function init() {
   document.getElementById('user-label').textContent = currentUser.full_name;
 
   onLanguageChange(() => {
+    if (isPanelVisible('panel-users') && isSubTabActive('users', 'directory')) renderUsers();
     loadFilters();
-    renderUsers();
-    if (isPanelVisible('panel-teachers-assign') || isPanelVisible('panel-teachers-directory')) loadTeachersTab();
-    if (isPanelVisible('panel-students-directory')) {
+    if (isPanelVisible('panel-teachers')) loadTeachersTab();
+    if (isPanelVisible('panel-students') && isSubTabActive('students', 'directory')) {
       if (studentFiltersReady()) renderStudents();
       else clearStudentsTable();
     }
@@ -657,7 +666,7 @@ async function init() {
       else clearAdminGradebook();
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
-    if (isPanelVisible('panel-schedules-directory')) {
+    if (isPanelVisible('panel-schedules') && isSubTabActive('schedules', 'directory')) {
       if (scheduleFiltersReady()) renderSchedules();
       else clearSchedulesTable();
     }
@@ -666,9 +675,14 @@ async function init() {
     }
   });
 
-  document.querySelectorAll('.layout > .tabs .tab').forEach(tab => {
+  document.querySelectorAll('.layout > .main-tabs .tab').forEach(tab => {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
   });
+
+  wireSubTabs('users', { defaultTab: 'create', onChange: (sub) => onTopicSubTabChange('users', sub) });
+  wireSubTabs('teachers', { defaultTab: 'assign', onChange: (sub) => onTopicSubTabChange('teachers', sub) });
+  wireSubTabs('students', { defaultTab: 'create', onChange: (sub) => onTopicSubTabChange('students', sub) });
+  wireSubTabs('schedules', { defaultTab: 'directory', onChange: (sub) => onTopicSubTabChange('schedules', sub) });
 
   wireSortSelect('users-sort', renderUsers);
   wireSortSelect('students-sort', renderStudents);
@@ -711,7 +725,9 @@ async function init() {
       document.getElementById('ta-filter-section').value = section;
       document.getElementById('ta-filter-subject').value = subject;
       await loadTeachersTab();
-      showTab('teachers-directory');
+      showTab('teachers');
+      showSubTab('teachers', 'directory');
+      onTopicSubTabChange('teachers', 'directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -726,7 +742,8 @@ async function init() {
       });
       showToast(t('userCreated'));
       e.target.reset();
-      showTab('users-directory');
+      showSubTab('users', 'directory');
+      onTopicSubTabChange('users', 'directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -744,7 +761,9 @@ async function init() {
       e.target.reset();
       document.getElementById('filter-grade').value = grade;
       document.getElementById('filter-section').value = section;
-      showTab('students-directory');
+      showTab('students');
+      showSubTab('students', 'directory');
+      onTopicSubTabChange('students', 'directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -766,7 +785,8 @@ async function init() {
       document.getElementById('sched-subject').value = '';
       document.getElementById('sched-grade').value = grade;
       document.getElementById('sched-section').value = section;
-      showTab('schedules-directory');
+      showSubTab('schedules', 'directory');
+      onTopicSubTabChange('schedules', 'directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 

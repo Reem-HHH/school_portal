@@ -651,6 +651,23 @@ html[dir="rtl"] .toast {
   animation: panelIn 0.2s ease;
 }
 
+.main-tabs {
+  margin-bottom: 0.75rem;
+}
+
+.topic-panel > .sub-tabs {
+  margin-bottom: 1.25rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-md);
+  background: var(--moe-gold-light);
+  border-color: rgba(182, 138, 53, 0.25);
+}
+
+.topic-panel > .sub-tabs .sub-tab {
+  font-size: 0.875rem;
+  padding: 0.6rem 1rem;
+}
+
 .sub-tabs {
   display: flex;
   gap: 0.25rem;
