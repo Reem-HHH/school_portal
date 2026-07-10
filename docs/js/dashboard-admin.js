@@ -102,17 +102,31 @@ async function loadStudentMeta() {
 function showTab(name) {
   document.querySelectorAll('.layout > .tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.layout > .tab-panel').forEach(p => p.classList.add('section-hidden'));
-  const panel = document.getElementById(`panel-${name}`);
-  panel?.classList.remove('section-hidden');
-  restoreSubTabs(`panel-${name}`);
+  document.getElementById(`panel-${name}`)?.classList.remove('section-hidden');
+  onMainTabChange(name);
 }
 
-function onAdminSubTabChange(group, subTab) {
-  if (group === 'users' && subTab === 'directory') loadUsers();
-  if (group === 'students' && subTab === 'directory') loadStudents();
-  if (group === 'teachers' && subTab === 'directory') loadAssignmentsList();
-  if (group === 'schedules' && subTab === 'directory') loadSchedules();
-  if (group === 'schedules' && subTab === 'create') syncScheduleCreateFilters();
+function isPanelVisible(id) {
+  const panel = document.getElementById(id);
+  return panel && !panel.classList.contains('section-hidden');
+}
+
+function onMainTabChange(name) {
+  if (name === 'users-directory') loadUsers();
+  if (name === 'students-directory') loadStudents();
+  if (name === 'teachers-assign') loadTeachersTab();
+  if (name === 'teachers-directory') {
+    loadTeachersTab();
+    loadAssignmentsList();
+  }
+  if (name === 'schedules-directory') loadSchedules();
+  if (name === 'schedules-create') syncScheduleCreateFilters();
+  if (name === 'gradebook') {
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  }
+  if (name === 'sample') resetSampleDataPreview('panel-sample');
+  if (name === 'logs') loadLogs();
 }
 
 function syncScheduleCreateFilters() {
@@ -250,7 +264,7 @@ async function loadUsers() {
   const { users } = await API.get('/api/auth/users');
   usersCache = users;
   renderUsers();
-  if (!document.getElementById('panel-students').classList.contains('section-hidden') && studentFiltersReady()) {
+  if (isPanelVisible('panel-students-directory') && studentFiltersReady()) {
     renderStudents();
   }
 }
@@ -632,8 +646,8 @@ async function init() {
   onLanguageChange(() => {
     loadFilters();
     renderUsers();
-    if (!document.getElementById('panel-teachers').classList.contains('section-hidden')) loadTeachersTab();
-    if (!document.getElementById('panel-students').classList.contains('section-hidden')) {
+    if (isPanelVisible('panel-teachers-assign') || isPanelVisible('panel-teachers-directory')) loadTeachersTab();
+    if (isPanelVisible('panel-students-directory')) {
       if (studentFiltersReady()) renderStudents();
       else clearStudentsTable();
     }
@@ -643,7 +657,7 @@ async function init() {
       else clearAdminGradebook();
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
-    if (!document.getElementById('panel-schedules').classList.contains('section-hidden')) {
+    if (isPanelVisible('panel-schedules-directory')) {
       if (scheduleFiltersReady()) renderSchedules();
       else clearSchedulesTable();
     }
@@ -653,25 +667,8 @@ async function init() {
   });
 
   document.querySelectorAll('.layout > .tabs .tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      showTab(tab.dataset.tab);
-      if (tab.dataset.tab === 'users') onAdminSubTabChange('users', getActiveSubTab('users') || 'create');
-      if (tab.dataset.tab === 'teachers') loadTeachersTab();
-      if (tab.dataset.tab === 'students') onAdminSubTabChange('students', getActiveSubTab('students') || 'create');
-      if (tab.dataset.tab === 'gradebook') {
-        showAdminGradebookOverview();
-        loadMasterGradebook();
-      }
-      if (tab.dataset.tab === 'schedules') onAdminSubTabChange('schedules', getActiveSubTab('schedules') || 'directory');
-      if (tab.dataset.tab === 'sample') resetSampleDataPreview('panel-sample');
-      if (tab.dataset.tab === 'logs') loadLogs();
-    });
+    tab.addEventListener('click', () => showTab(tab.dataset.tab));
   });
-
-  wireSubTabs('users', { defaultTab: 'create', onChange: onAdminSubTabChange });
-  wireSubTabs('students', { defaultTab: 'create', onChange: onAdminSubTabChange });
-  wireSubTabs('teachers', { defaultTab: 'assign', onChange: onAdminSubTabChange });
-  wireSubTabs('schedules', { defaultTab: 'directory', onChange: onAdminSubTabChange });
 
   wireSortSelect('users-sort', renderUsers);
   wireSortSelect('students-sort', renderStudents);
@@ -714,8 +711,7 @@ async function init() {
       document.getElementById('ta-filter-section').value = section;
       document.getElementById('ta-filter-subject').value = subject;
       await loadTeachersTab();
-      showSubTab('teachers', 'directory');
-      onAdminSubTabChange('teachers', 'directory');
+      showTab('teachers-directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -730,8 +726,7 @@ async function init() {
       });
       showToast(t('userCreated'));
       e.target.reset();
-      showSubTab('users', 'directory');
-      await loadUsers();
+      showTab('users-directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -749,8 +744,7 @@ async function init() {
       e.target.reset();
       document.getElementById('filter-grade').value = grade;
       document.getElementById('filter-section').value = section;
-      showSubTab('students', 'directory');
-      await loadStudents();
+      showTab('students-directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -772,8 +766,7 @@ async function init() {
       document.getElementById('sched-subject').value = '';
       document.getElementById('sched-grade').value = grade;
       document.getElementById('sched-section').value = section;
-      showSubTab('schedules', 'directory');
-      await loadSchedules();
+      showTab('schedules-directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -795,7 +788,6 @@ async function init() {
   clearStudentsTable();
   clearAdminGradebook();
   clearSchedulesTable();
-  onAdminSubTabChange('users', getActiveSubTab('users') || 'create');
 }
 
 init();

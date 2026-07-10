@@ -27,192 +27,173 @@
 
   <main class="layout">
     <div class="tabs">
-      <button class="tab active" data-tab="users" data-i18n="tabUsers">Users</button>
-      <button class="tab" data-tab="teachers" data-i18n="tabTeachers">Teachers</button>
-      <button class="tab" data-tab="students" data-i18n="tabStudents">Students</button>
+      <button class="tab active" data-tab="users-create" data-i18n="subTabCreateUser">Create user</button>
+      <button class="tab" data-tab="users-directory" data-i18n="subTabUserDirectory">User directory</button>
+      <button class="tab" data-tab="teachers-assign" data-i18n="subTabAssignClass">Assign class</button>
+      <button class="tab" data-tab="teachers-directory" data-i18n="subTabAssignmentsDirectory">Assignments</button>
+      <button class="tab" data-tab="students-create" data-i18n="subTabAddStudent">Add student</button>
+      <button class="tab" data-tab="students-directory" data-i18n="subTabStudentDirectory">Student directory</button>
       <button class="tab" data-tab="gradebook" data-i18n="tabMasterGradebook">Master Gradebook</button>
-      <button class="tab" data-tab="schedules" data-i18n="tabSchedules">Schedules</button>
+      <button class="tab" data-tab="schedules-directory" data-i18n="subTabScheduleDirectory">Timetable</button>
+      <button class="tab" data-tab="schedules-create" data-i18n="subTabAddSchedule">Add schedule</button>
       <button class="tab" data-tab="sample" data-i18n="tabSampleData" id="tab-sample-btn">Sample Data</button>
       <button class="tab" data-tab="logs" data-i18n="tabLogs">Activity Log</button>
     </div>
 
-    <div id="panel-users" class="tab-panel">
-      <nav class="sub-tabs" data-sub-tabs="users" role="tablist">
-        <button type="button" class="sub-tab active" data-sub-tab="create" role="tab" aria-selected="true" data-i18n="subTabCreateUser">Create user</button>
-        <button type="button" class="sub-tab" data-sub-tab="directory" role="tab" aria-selected="false" data-i18n="subTabUserDirectory">User directory</button>
-      </nav>
-
-      <div class="sub-tab-panel" data-sub-panel="create" id="subpanel-users-create">
-        <h2 data-i18n="createUser">Create user</h2>
-        <p class="panel-lead" data-i18n="createUserDesc">Add a new account for admin, teacher, parent, or student roles.</p>
-        <form id="create-user-form" class="card form-grid form-grid-3">
-          <div class="form-row"><label data-i18n="name">Full name</label><input id="new-name" required></div>
-          <div class="form-row"><label data-i18n="email">Email</label><input id="new-email" type="email" required></div>
-          <div class="form-row"><label data-i18n="password">Password</label><input id="new-password" type="password" required minlength="6"></div>
-          <div class="form-row">
-            <label data-i18n="role">Role</label>
-            <select id="new-role">
-              <option value="admin">Admin</option>
-              <option value="teacher">Teacher</option>
-              <option value="parent">Parent</option>
-              <option value="student">Student</option>
-            </select>
-          </div>
-          <div class="align-end"><button type="submit" class="btn" data-i18n="createUserBtn">Create user</button></div>
-        </form>
-      </div>
-
-      <div class="sub-tab-panel section-hidden" data-sub-panel="directory" id="subpanel-users-directory">
-        <h2 data-i18n="userDirectory">User directory</h2>
-        <p class="panel-lead" data-i18n="userDirectoryDesc">Browse, update roles, reset passwords, and manage account status.</p>
-        <div class="table-toolbar">
-          <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
-          <select id="users-sort" class="input-field toolbar-select">
-            <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
-            <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
-            <option value="email-asc" data-i18n="sortEmailAsc">Email (A–Z)</option>
-            <option value="role-asc" data-i18n="sortRole">Role</option>
-            <option value="newest" data-i18n="sortNewest">Newest first</option>
-            <option value="oldest" data-i18n="sortOldest">Oldest first</option>
+    <div id="panel-users-create" class="tab-panel">
+      <h2 data-i18n="createUser">Create user</h2>
+      <p class="panel-lead" data-i18n="createUserDesc">Add a new account for admin, teacher, parent, or student roles.</p>
+      <form id="create-user-form" class="card form-grid form-grid-3">
+        <div class="form-row"><label data-i18n="name">Full name</label><input id="new-name" required></div>
+        <div class="form-row"><label data-i18n="email">Email</label><input id="new-email" type="email" required></div>
+        <div class="form-row"><label data-i18n="password">Password</label><input id="new-password" type="password" required minlength="6"></div>
+        <div class="form-row">
+          <label data-i18n="role">Role</label>
+          <select id="new-role">
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+            <option value="student">Student</option>
           </select>
         </div>
-        <div class="data-table-wrap mt-1">
-          <table>
-            <thead><tr>
-              <th data-i18n="name">Full name</th>
-              <th data-i18n="email">Email</th>
-              <th data-i18n="role">Role</th>
-              <th data-i18n="status">Status</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="users-table"></tbody>
-          </table>
-        </div>
+        <div class="align-end"><button type="submit" class="btn" data-i18n="createUserBtn">Create user</button></div>
+      </form>
+    </div>
+
+    <div id="panel-users-directory" class="tab-panel section-hidden">
+      <h2 data-i18n="userDirectory">User directory</h2>
+      <p class="panel-lead" data-i18n="userDirectoryDesc">Browse, update roles, reset passwords, and manage account status.</p>
+      <div class="table-toolbar">
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="users-sort" class="input-field toolbar-select">
+          <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
+          <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
+          <option value="email-asc" data-i18n="sortEmailAsc">Email (A–Z)</option>
+          <option value="role-asc" data-i18n="sortRole">Role</option>
+          <option value="newest" data-i18n="sortNewest">Newest first</option>
+          <option value="oldest" data-i18n="sortOldest">Oldest first</option>
+        </select>
+      </div>
+      <div class="data-table-wrap mt-1">
+        <table>
+          <thead><tr>
+            <th data-i18n="name">Full name</th>
+            <th data-i18n="email">Email</th>
+            <th data-i18n="role">Role</th>
+            <th data-i18n="status">Status</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="users-table"></tbody>
+        </table>
       </div>
     </div>
 
-    <div id="panel-teachers" class="tab-panel section-hidden">
-      <nav class="sub-tabs" data-sub-tabs="teachers" role="tablist">
-        <button type="button" class="sub-tab active" data-sub-tab="assign" role="tab" aria-selected="true" data-i18n="subTabAssignClass">Assign class</button>
-        <button type="button" class="sub-tab" data-sub-tab="directory" role="tab" aria-selected="false" data-i18n="subTabAssignmentsDirectory">Assignments directory</button>
-      </nav>
-
-      <div class="sub-tab-panel" data-sub-panel="assign" id="subpanel-teachers-assign">
-        <h2 data-i18n="teacherAssignments">Teacher assignments</h2>
-        <p class="panel-lead" data-i18n="teacherAssignmentsDesc">Assign teachers to classes by subject, grade, and section.</p>
-        <form id="assign-teacher-form" class="card form-grid form-grid-3 mb-1">
-          <div class="form-row">
-            <label data-i18n="teacher">Teacher</label>
-            <select id="assign-teacher" required>
-              <option value="" data-i18n="selectTeacher">Select teacher</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="subject">Subject</label>
-            <select id="assign-subject" required>
-              <option value="" data-i18n="selectSubject">Select subject</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="grade">Grade</label>
-            <select id="assign-grade" required>
-              <option value="" data-i18n="selectGrade">Select grade</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="section">Section</label>
-            <select id="assign-section" required>
-              <option value="" data-i18n="selectSection">Select section</option>
-            </select>
-          </div>
-          <div class="form-row align-end span-full">
-            <button type="submit" class="btn" data-i18n="assignClass">Assign class</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="sub-tab-panel section-hidden" data-sub-panel="directory" id="subpanel-teachers-directory">
-        <h2 data-i18n="assignmentsDirectory">Assignments directory</h2>
-        <p class="panel-lead" data-i18n="assignmentsDirectoryDesc">Filter and review teacher class assignments.</p>
-        <div class="table-toolbar">
-          <select id="ta-filter-teacher" class="input-field toolbar-select">
-            <option value="" data-i18n="allTeachers">All teachers</option>
-          </select>
-          <select id="ta-filter-grade" class="input-field toolbar-select">
-            <option value="" data-i18n="allGrades">All grades</option>
-          </select>
-          <select id="ta-filter-section" class="input-field toolbar-select">
-            <option value="" data-i18n="allSections">All sections</option>
-          </select>
-          <select id="ta-filter-subject" class="input-field toolbar-select">
-            <option value="" data-i18n="allSubjects">All subjects</option>
+    <div id="panel-teachers-assign" class="tab-panel section-hidden">
+      <h2 data-i18n="teacherAssignments">Teacher assignments</h2>
+      <p class="panel-lead" data-i18n="teacherAssignmentsDesc">Assign teachers to classes by subject, grade, and section.</p>
+      <form id="assign-teacher-form" class="card form-grid form-grid-3 mb-1">
+        <div class="form-row">
+          <label data-i18n="teacher">Teacher</label>
+          <select id="assign-teacher" required>
+            <option value="" data-i18n="selectTeacher">Select teacher</option>
           </select>
         </div>
-
-        <div class="data-table-wrap">
-          <table>
-            <thead><tr>
-              <th data-i18n="teacher">Teacher</th>
-              <th data-i18n="subject">Subject</th>
-              <th data-i18n="grade">Grade</th>
-              <th data-i18n="section">Section</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="assignments-table"></tbody>
-          </table>
+        <div class="form-row">
+          <label data-i18n="subject">Subject</label>
+          <select id="assign-subject" required>
+            <option value="" data-i18n="selectSubject">Select subject</option>
+          </select>
         </div>
-
-        <details class="card mt-1 teacher-roster-details">
-          <summary data-i18n="teacherRoster">Teacher roster</summary>
-          <div id="teachers-roster" class="teacher-roster mt-1"></div>
-        </details>
-      </div>
+        <div class="form-row">
+          <label data-i18n="grade">Grade</label>
+          <select id="assign-grade" required>
+            <option value="" data-i18n="selectGrade">Select grade</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="section">Section</label>
+          <select id="assign-section" required>
+            <option value="" data-i18n="selectSection">Select section</option>
+          </select>
+        </div>
+        <div class="form-row align-end span-full">
+          <button type="submit" class="btn" data-i18n="assignClass">Assign class</button>
+        </div>
+      </form>
     </div>
 
-    <div id="panel-students" class="tab-panel section-hidden">
-      <nav class="sub-tabs" data-sub-tabs="students" role="tablist">
-        <button type="button" class="sub-tab active" data-sub-tab="create" role="tab" aria-selected="true" data-i18n="subTabAddStudent">Add student</button>
-        <button type="button" class="sub-tab" data-sub-tab="directory" role="tab" aria-selected="false" data-i18n="subTabStudentDirectory">Student directory</button>
-      </nav>
-
-      <div class="sub-tab-panel" data-sub-panel="create" id="subpanel-students-create">
-        <h2 data-i18n="addStudent">Add student</h2>
-        <p class="panel-lead" data-i18n="addStudentDesc">Register a new student in the school directory.</p>
-        <form id="create-student-form" class="card form-grid form-grid-3 mb-1">
-          <div class="form-row"><label data-i18n="name">Full name</label><input id="stu-name" required></div>
-          <div class="form-row"><label data-i18n="grade">Grade</label><select id="stu-grade" required><option value="" data-i18n="selectGrade">Select grade</option></select></div>
-          <div class="form-row"><label data-i18n="section">Section</label><select id="stu-section" required><option value="" data-i18n="selectSection">Select section</option></select></div>
-          <div class="align-end"><button type="submit" class="btn" data-i18n="addStudent">Add student</button></div>
-        </form>
+    <div id="panel-teachers-directory" class="tab-panel section-hidden">
+      <h2 data-i18n="assignmentsDirectory">Assignments directory</h2>
+      <p class="panel-lead" data-i18n="assignmentsDirectoryDesc">Filter and review teacher class assignments.</p>
+      <div class="table-toolbar">
+        <select id="ta-filter-teacher" class="input-field toolbar-select">
+          <option value="" data-i18n="allTeachers">All teachers</option>
+        </select>
+        <select id="ta-filter-grade" class="input-field toolbar-select">
+          <option value="" data-i18n="allGrades">All grades</option>
+        </select>
+        <select id="ta-filter-section" class="input-field toolbar-select">
+          <option value="" data-i18n="allSections">All sections</option>
+        </select>
+        <select id="ta-filter-subject" class="input-field toolbar-select">
+          <option value="" data-i18n="allSubjects">All subjects</option>
+        </select>
       </div>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr>
+            <th data-i18n="teacher">Teacher</th>
+            <th data-i18n="subject">Subject</th>
+            <th data-i18n="grade">Grade</th>
+            <th data-i18n="section">Section</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="assignments-table"></tbody>
+        </table>
+      </div>
+      <details class="card mt-1 teacher-roster-details">
+        <summary data-i18n="teacherRoster">Teacher roster</summary>
+        <div id="teachers-roster" class="teacher-roster mt-1"></div>
+      </details>
+    </div>
 
-      <div class="sub-tab-panel section-hidden" data-sub-panel="directory" id="subpanel-students-directory">
-        <h2 data-i18n="studentDirectory">Student directory</h2>
-        <p class="panel-lead" data-i18n="studentDirectoryDesc">View students by class, link parents, and manage records.</p>
-        <div class="table-toolbar">
-          <select id="filter-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
-          <select id="filter-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
-          <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
-          <select id="students-sort" class="input-field toolbar-select">
-            <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
-            <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
-            <option value="grade-asc" data-i18n="sortGrade">Grade</option>
-            <option value="section-asc" data-i18n="sortSection">Section</option>
-          </select>
-        </div>
-        <div class="data-table-wrap">
-          <table>
-            <thead><tr>
-              <th data-i18n="name">Full name</th>
-              <th data-i18n="grade">Grade</th>
-              <th data-i18n="section">Section</th>
-              <th data-i18n="parent">Parent</th>
-              <th data-i18n="linkedUser">Linked user</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="students-table"></tbody>
-          </table>
-        </div>
+    <div id="panel-students-create" class="tab-panel section-hidden">
+      <h2 data-i18n="addStudent">Add student</h2>
+      <p class="panel-lead" data-i18n="addStudentDesc">Register a new student in the school directory.</p>
+      <form id="create-student-form" class="card form-grid form-grid-3 mb-1">
+        <div class="form-row"><label data-i18n="name">Full name</label><input id="stu-name" required></div>
+        <div class="form-row"><label data-i18n="grade">Grade</label><select id="stu-grade" required><option value="" data-i18n="selectGrade">Select grade</option></select></div>
+        <div class="form-row"><label data-i18n="section">Section</label><select id="stu-section" required><option value="" data-i18n="selectSection">Select section</option></select></div>
+        <div class="align-end"><button type="submit" class="btn" data-i18n="addStudent">Add student</button></div>
+      </form>
+    </div>
+
+    <div id="panel-students-directory" class="tab-panel section-hidden">
+      <h2 data-i18n="studentDirectory">Student directory</h2>
+      <p class="panel-lead" data-i18n="studentDirectoryDesc">View students by class, link parents, and manage records.</p>
+      <div class="table-toolbar">
+        <select id="filter-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
+        <select id="filter-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
+        <label class="toolbar-label" data-i18n="sortBy">Sort by</label>
+        <select id="students-sort" class="input-field toolbar-select">
+          <option value="name-asc" data-i18n="sortNameAsc">Name (A–Z)</option>
+          <option value="name-desc" data-i18n="sortNameDesc">Name (Z–A)</option>
+          <option value="grade-asc" data-i18n="sortGrade">Grade</option>
+          <option value="section-asc" data-i18n="sortSection">Section</option>
+        </select>
+      </div>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr>
+            <th data-i18n="name">Full name</th>
+            <th data-i18n="grade">Grade</th>
+            <th data-i18n="section">Section</th>
+            <th data-i18n="parent">Parent</th>
+            <th data-i18n="linkedUser">Linked user</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="students-table"></tbody>
+        </table>
       </div>
     </div>
 
@@ -254,49 +235,42 @@
       </div>
     </div>
 
-    <div id="panel-schedules" class="tab-panel section-hidden">
-      <nav class="sub-tabs" data-sub-tabs="schedules" role="tablist">
-        <button type="button" class="sub-tab active" data-sub-tab="directory" role="tab" aria-selected="true" data-i18n="subTabScheduleDirectory">View timetable</button>
-        <button type="button" class="sub-tab" data-sub-tab="create" role="tab" aria-selected="false" data-i18n="subTabAddSchedule">Add entry</button>
-      </nav>
+    <div id="panel-schedules-directory" class="tab-panel section-hidden">
+      <h2 data-i18n="classSchedules">Class schedules</h2>
+      <p class="panel-lead" data-i18n="classSchedulesDesc">Manage weekly timetables by grade and section.</p>
+      <div class="table-toolbar">
+        <select id="sched-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
+        <select id="sched-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
+      </div>
+      <div id="schedules-table" class="data-table-wrap"></div>
+    </div>
 
-      <div class="sub-tab-panel" data-sub-panel="directory" id="subpanel-schedules-directory">
-        <h2 data-i18n="classSchedules">Class schedules</h2>
-        <p class="panel-lead" data-i18n="classSchedulesDesc">Manage weekly timetables by grade and section.</p>
-        <div class="table-toolbar">
-          <select id="sched-grade" class="input-field toolbar-select"><option value="" data-i18n="selectGrade">Select grade</option></select>
-          <select id="sched-section" class="input-field toolbar-select"><option value="" data-i18n="selectSection">Select section</option></select>
+    <div id="panel-schedules-create" class="tab-panel section-hidden">
+      <h2 data-i18n="addScheduleEntry">Add entry</h2>
+      <p class="panel-lead" data-i18n="addScheduleDesc">Add a period to the class timetable. Select grade and section first.</p>
+      <form id="create-schedule-form" class="card form-grid form-grid-3 mb-1">
+        <div class="form-row">
+          <label data-i18n="grade">Grade</label>
+          <select id="sched-grade-create" required><option value="" data-i18n="selectGrade">Select grade</option></select>
         </div>
-        <div id="schedules-table" class="data-table-wrap"></div>
-      </div>
-
-      <div class="sub-tab-panel section-hidden" data-sub-panel="create" id="subpanel-schedules-create">
-        <h2 data-i18n="addScheduleEntry">Add entry</h2>
-        <p class="panel-lead" data-i18n="addScheduleDesc">Add a period to the class timetable. Select grade and section first.</p>
-        <form id="create-schedule-form" class="card form-grid form-grid-3 mb-1">
-          <div class="form-row">
-            <label data-i18n="grade">Grade</label>
-            <select id="sched-grade-create" required><option value="" data-i18n="selectGrade">Select grade</option></select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="section">Section</label>
-            <select id="sched-section-create" required><option value="" data-i18n="selectSection">Select section</option></select>
-          </div>
-          <div class="form-row">
-            <label data-i18n="day">Day</label>
-            <select id="sched-day" required>
-              <option value="Sun">Sun</option>
-              <option value="Mon">Mon</option>
-              <option value="Tue">Tue</option>
-              <option value="Wed">Wed</option>
-              <option value="Thu">Thu</option>
-            </select>
-          </div>
-          <div class="form-row"><label data-i18n="time">Time</label><input id="sched-time" placeholder="8:00 - 8:45" required></div>
-          <div class="form-row"><label data-i18n="subject">Subject</label><input id="sched-subject" required></div>
-          <div class="align-end"><button type="submit" class="btn" data-i18n="addScheduleEntry">Add entry</button></div>
-        </form>
-      </div>
+        <div class="form-row">
+          <label data-i18n="section">Section</label>
+          <select id="sched-section-create" required><option value="" data-i18n="selectSection">Select section</option></select>
+        </div>
+        <div class="form-row">
+          <label data-i18n="day">Day</label>
+          <select id="sched-day" required>
+            <option value="Sun">Sun</option>
+            <option value="Mon">Mon</option>
+            <option value="Tue">Tue</option>
+            <option value="Wed">Wed</option>
+            <option value="Thu">Thu</option>
+          </select>
+        </div>
+        <div class="form-row"><label data-i18n="time">Time</label><input id="sched-time" placeholder="8:00 - 8:45" required></div>
+        <div class="form-row"><label data-i18n="subject">Subject</label><input id="sched-subject" required></div>
+        <div class="align-end"><button type="submit" class="btn" data-i18n="addScheduleEntry">Add entry</button></div>
+      </form>
     </div>
 
     <div id="panel-sample" class="tab-panel section-hidden">
@@ -354,7 +328,6 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/sub-tabs.js"></script>
   <script src="js/dashboard-admin.js"></script>
 </body>
 </html>
