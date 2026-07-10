@@ -1,18 +1,19 @@
 const subTabMemory = {};
 
 function showSubTab(group, name, { animate = true } = {}) {
-  const root = document.querySelector(`[data-sub-tabs="${group}"]`)?.closest('.tab-panel');
+  const bar = document.querySelector(`[data-sub-tabs="${group}"]`);
+  const root = bar?.closest('.topic-panel');
   if (!root) return;
 
   subTabMemory[group] = name;
   try { sessionStorage.setItem(`subtab:${group}`, name); } catch (_) {}
 
-  root.querySelectorAll('.sub-tab').forEach(btn => {
+  bar.querySelectorAll('.sub-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.subTab === name);
     btn.setAttribute('aria-selected', btn.dataset.subTab === name ? 'true' : 'false');
   });
 
-  root.querySelectorAll('.sub-tab-panel').forEach(panel => {
+  root.querySelectorAll(':scope > .sub-tab-panel').forEach(panel => {
     const active = panel.dataset.subPanel === name;
     panel.classList.toggle('section-hidden', !active);
     if (active && animate) {
@@ -47,8 +48,6 @@ function wireSubTabs(group, { defaultTab, onChange } = {}) {
       onChange?.(btn.dataset.subTab, group);
     });
   });
-
-  showSubTab(group, initial, { animate: false });
 }
 
 function restoreSubTabs(panelId) {
@@ -60,4 +59,8 @@ function restoreSubTabs(panelId) {
     const fallback = bar.querySelector('.sub-tab')?.dataset.subTab;
     if (saved || fallback) showSubTab(group, saved || fallback, { animate: false });
   });
+}
+
+function isSubTabActive(group, name) {
+  return getActiveSubTab(group) === name;
 }
