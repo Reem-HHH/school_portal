@@ -2,7 +2,7 @@
    Colors: Gold PMS 8960, Silver PMS 877, Iron Cool Gray
    Digital body: Arial | Headings: Cronos Pro / AXT Manal substitutes */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
 
 :root {
   /* Primary palette — UAE Federal Ministries */
@@ -20,9 +20,10 @@
 
   /* Typography — digital guidelines */
   --font-body: Arial, Helvetica, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body-ar: Arial, 'Noto Naskh Arabic', Tahoma, sans-serif;
+  --font-body-ar: 'Roboto', Arial, Tahoma, sans-serif;
   --font-heading: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --font-heading-ar: 'Noto Naskh Arabic', 'Source Serif 4', Georgia, serif;
+  --font-heading-ar: 'Roboto', Arial, Tahoma, sans-serif;
+  --font-size-ar: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);
 
   --text-primary: var(--moe-iron);
   --text-muted: #6B6B6D;
@@ -70,6 +71,8 @@ body {
 body.arabic {
   direction: rtl;
   font-family: var(--font-body-ar);
+  font-size: var(--font-size-ar);
+  line-height: 1.7;
 }
 
 html[dir="rtl"] th,
@@ -199,6 +202,7 @@ html[dir="rtl"] .auth-brand {
 
 html[dir="rtl"] .logo {
   font-family: var(--font-heading-ar);
+  font-size: clamp(1.05rem, 1rem + 0.4vw, 1.15rem);
 }
 
 .logo:hover {
@@ -259,6 +263,10 @@ html[dir="rtl"] h2,
 html[dir="rtl"] h3 {
   font-family: var(--font-heading-ar);
 }
+
+html[dir="rtl"] h1 { font-size: clamp(1.45rem, 1.3rem + 0.9vw, 1.65rem); }
+html[dir="rtl"] h2 { font-size: clamp(1.15rem, 1.05rem + 0.4vw, 1.25rem); }
+html[dir="rtl"] h3 { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1rem); }
 
 h1 { font-size: clamp(1.35rem, 1.2rem + 0.8vw, 1.5rem); color: var(--moe-gold-dark); }
 h2 { font-size: clamp(1.05rem, 1rem + 0.35vw, 1.125rem); margin-top: clamp(1.25rem, 3vw, 2rem); }
