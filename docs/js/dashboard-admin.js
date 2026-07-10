@@ -17,7 +17,6 @@ function clearSchedulesTable() {
   schedulesCache = [];
   document.getElementById('schedules-table').innerHTML =
     emptyPanelPrompt('selectGradeSectionStudentsHint');
-  document.getElementById('create-schedule-form')?.classList.add('section-hidden');
 }
 
 function renderSchedules() {
@@ -25,8 +24,6 @@ function renderSchedules() {
     clearSchedulesTable();
     return;
   }
-
-  document.getElementById('create-schedule-form')?.classList.remove('section-hidden');
 
   if (!schedulesCache.length) {
     document.getElementById('schedules-table').innerHTML = `<p class="muted">${t('noScheduleEntries')}</p>`;
@@ -85,14 +82,14 @@ async function loadStudentMeta() {
   const sectionOpts = sections.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   document.getElementById('stu-grade').innerHTML = `<option value="">${t('selectGrade')}</option>` + gradeOpts;
   document.getElementById('stu-section').innerHTML = `<option value="">${t('selectSection')}</option>` + sectionOpts;
-  ['sched-grade'].forEach(id => {
+  ['sched-grade', 'sched-grade-create'].forEach(id => {
     const el = document.getElementById(id);
     const saved = el?.value || '';
     if (el) el.innerHTML = `<option value="">${t('selectGrade')}</option>` + grades.map(g =>
       `<option value="${escapeHtml(g)}"${g === saved ? ' selected' : ''}>${escapeHtml(g)}</option>`
     ).join('');
   });
-  ['sched-section'].forEach(id => {
+  ['sched-section', 'sched-section-create'].forEach(id => {
     const el = document.getElementById(id);
     const saved = el?.value || '';
     if (el) el.innerHTML = `<option value="">${t('selectSection')}</option>` + sections.map(s =>
@@ -103,9 +100,26 @@ async function loadStudentMeta() {
 
 
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('section-hidden'));
-  document.getElementById(`panel-${name}`).classList.remove('section-hidden');
+  document.querySelectorAll('.layout > .tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.layout > .tab-panel').forEach(p => p.classList.add('section-hidden'));
+  const panel = document.getElementById(`panel-${name}`);
+  panel?.classList.remove('section-hidden');
+  restoreSubTabs(`panel-${name}`);
+}
+
+function onAdminSubTabChange(group, subTab) {
+  if (group === 'users' && subTab === 'directory') loadUsers();
+  if (group === 'students' && subTab === 'directory') loadStudents();
+  if (group === 'teachers' && subTab === 'directory') loadAssignmentsList();
+  if (group === 'schedules' && subTab === 'directory') loadSchedules();
+  if (group === 'schedules' && subTab === 'create') syncScheduleCreateFilters();
+}
+
+function syncScheduleCreateFilters() {
+  const grade = document.getElementById('sched-grade')?.value;
+  const section = document.getElementById('sched-section')?.value;
+  if (grade) document.getElementById('sched-grade-create').value = grade;
+  if (section) document.getElementById('sched-section-create').value = section;
 }
 
 function localeCompare(a, b) {
@@ -638,20 +652,26 @@ async function init() {
     }
   });
 
-  document.querySelectorAll('.tab').forEach(tab => {
+  document.querySelectorAll('.layout > .tabs .tab').forEach(tab => {
     tab.addEventListener('click', () => {
       showTab(tab.dataset.tab);
+      if (tab.dataset.tab === 'users') onAdminSubTabChange('users', getActiveSubTab('users') || 'create');
       if (tab.dataset.tab === 'teachers') loadTeachersTab();
-      if (tab.dataset.tab === 'students') loadStudents();
+      if (tab.dataset.tab === 'students') onAdminSubTabChange('students', getActiveSubTab('students') || 'create');
       if (tab.dataset.tab === 'gradebook') {
         showAdminGradebookOverview();
         loadMasterGradebook();
       }
-      if (tab.dataset.tab === 'schedules') loadSchedules();
+      if (tab.dataset.tab === 'schedules') onAdminSubTabChange('schedules', getActiveSubTab('schedules') || 'directory');
       if (tab.dataset.tab === 'sample') resetSampleDataPreview('panel-sample');
       if (tab.dataset.tab === 'logs') loadLogs();
     });
   });
+
+  wireSubTabs('users', { defaultTab: 'create', onChange: onAdminSubTabChange });
+  wireSubTabs('students', { defaultTab: 'create', onChange: onAdminSubTabChange });
+  wireSubTabs('teachers', { defaultTab: 'assign', onChange: onAdminSubTabChange });
+  wireSubTabs('schedules', { defaultTab: 'directory', onChange: onAdminSubTabChange });
 
   wireSortSelect('users-sort', renderUsers);
   wireSortSelect('students-sort', renderStudents);
@@ -694,6 +714,8 @@ async function init() {
       document.getElementById('ta-filter-section').value = section;
       document.getElementById('ta-filter-subject').value = subject;
       await loadTeachersTab();
+      showSubTab('teachers', 'directory');
+      onAdminSubTabChange('teachers', 'directory');
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -708,37 +730,50 @@ async function init() {
       });
       showToast(t('userCreated'));
       e.target.reset();
-      loadUsers();
+      showSubTab('users', 'directory');
+      await loadUsers();
     } catch (err) { showToast(err.message, 'error'); }
   });
 
   document.getElementById('create-student-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const grade = document.getElementById('stu-grade').value;
+    const section = document.getElementById('stu-section').value;
     try {
       await API.post('/api/students', {
         name: document.getElementById('stu-name').value,
-        grade: document.getElementById('stu-grade').value,
-        section: document.getElementById('stu-section').value
+        grade,
+        section
       });
       showToast(t('studentAdded'));
       e.target.reset();
-      loadStudents();
+      document.getElementById('filter-grade').value = grade;
+      document.getElementById('filter-section').value = section;
+      showSubTab('students', 'directory');
+      await loadStudents();
     } catch (err) { showToast(err.message, 'error'); }
   });
 
   document.getElementById('create-schedule-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const grade = document.getElementById('sched-grade-create').value;
+    const section = document.getElementById('sched-section-create').value;
     try {
       await API.post('/api/schedules/class', {
-        grade: document.getElementById('sched-grade').value,
-        section: document.getElementById('sched-section').value,
+        grade,
+        section,
         day: document.getElementById('sched-day').value,
         timeSlot: document.getElementById('sched-time').value,
         subject: document.getElementById('sched-subject').value
       });
       showToast(t('updated'));
-      e.target.reset();
-      loadSchedules();
+      document.getElementById('sched-day').selectedIndex = 0;
+      document.getElementById('sched-time').value = '';
+      document.getElementById('sched-subject').value = '';
+      document.getElementById('sched-grade').value = grade;
+      document.getElementById('sched-section').value = section;
+      showSubTab('schedules', 'directory');
+      await loadSchedules();
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -759,7 +794,8 @@ async function init() {
   await loadFilters();
   clearStudentsTable();
   clearAdminGradebook();
-  await loadUsers();
+  clearSchedulesTable();
+  onAdminSubTabChange('users', getActiveSubTab('users') || 'create');
 }
 
 init();
