@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { LESSON_SLOTS } = require('../lib/schedule-constants');
 
 const GRADES = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4'];
 const SECTIONS = ['Section A', 'Section B', 'Section C', 'Section D'];
@@ -155,18 +156,15 @@ async function seedDummyData(db, usePg) {
     }
   }
 
-  const classScheduleTemplate = [
-    ['Sun', '8:00 - 8:45', 'Arabic'],
-    ['Sun', '9:00 - 9:45', 'Math'],
-    ['Mon', '8:00 - 8:45', 'English'],
-    ['Mon', '9:00 - 9:45', 'Science'],
-    ['Tue', '8:00 - 8:45', 'Math'],
-    ['Tue', '9:00 - 9:45', 'Islamic Studies'],
-    ['Wed', '8:00 - 8:45', 'Arabic'],
-    ['Wed', '9:00 - 9:45', 'English'],
-    ['Thu', '8:00 - 8:45', 'Science'],
-    ['Thu', '9:00 - 9:45', 'Math']
-  ];
+  const weeklySubjects = ['Arabic', 'English', 'Math', 'Science', 'Islamic Studies', 'Art', 'PE'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+  const classScheduleTemplate = [];
+  days.forEach((day, dayIndex) => {
+    LESSON_SLOTS.forEach((slot, slotIndex) => {
+      const subject = weeklySubjects[(dayIndex + slotIndex) % weeklySubjects.length];
+      classScheduleTemplate.push([day, slot, subject]);
+    });
+  });
 
   for (const grade of GRADES) {
     for (const section of SECTIONS) {
@@ -181,22 +179,22 @@ async function seedDummyData(db, usePg) {
   }
 
   const teacher1Slots = [
-    ['Sun', '9:00 - 9:45', 'Math'],
-    ['Mon', '9:00 - 9:45', 'Science'],
-    ['Tue', '8:00 - 8:45', 'Math'],
-    ['Wed', '9:00 - 9:45', 'Science'],
-    ['Thu', '9:00 - 9:45', 'Math']
+    ['Sun', '9:15 - 10:00', 'Math'],
+    ['Mon', '10:00 - 10:45', 'Science'],
+    ['Tue', '7:30 - 8:15', 'Math'],
+    ['Wed', '9:15 - 10:00', 'Science'],
+    ['Thu', '12:30 - 13:15', 'Math']
   ];
   for (const [day, time, subject] of teacher1Slots) {
     await ensureTeacherSchedule(db, teacher1.id, day, time, subject);
   }
 
   const teacher2Slots = [
-    ['Sun', '8:00 - 8:45', 'Arabic'],
-    ['Mon', '8:00 - 8:45', 'English'],
-    ['Tue', '9:00 - 9:45', 'Arabic'],
-    ['Wed', '8:00 - 8:45', 'English'],
-    ['Thu', '8:00 - 8:45', 'Arabic']
+    ['Sun', '7:30 - 8:15', 'Arabic'],
+    ['Mon', '8:15 - 9:00', 'English'],
+    ['Tue', '10:45 - 11:30', 'Arabic'],
+    ['Wed', '7:30 - 8:15', 'English'],
+    ['Thu', '8:15 - 9:00', 'Arabic']
   ];
   for (const [day, time, subject] of teacher2Slots) {
     await ensureTeacherSchedule(db, teacher2.id, day, time, subject);

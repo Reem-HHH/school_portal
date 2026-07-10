@@ -8,13 +8,8 @@ function showTab(name) {
   document.getElementById(`panel-${name}`).classList.remove('section-hidden');
 }
 
-function renderScheduleTable(container, days, entries) {
-  const slots = [...new Set(entries.map(e => e.time_slot))].sort();
-  const lookup = {};
-  entries.forEach(e => { lookup[`${e.time_slot}|${e.day}`] = e.subject; });
-  container.innerHTML = `<table><thead><tr><th>${t('time')}</th>${days.map(d => `<th>${tDay(d)}</th>`).join('')}</tr></thead><tbody>
-    ${slots.map(time => `<tr><td>${time}</td>${days.map(d => `<td>${lookup[`${time}|${d}`] || '—'}</td>`).join('')}</tr>`).join('')}
-  </tbody></table>`;
+function renderScheduleTable(container, meta, entries) {
+  renderTimetableGrid(container, meta, entries);
 }
 
 async function loadProfile() {
@@ -57,11 +52,15 @@ async function loadSchedule() {
   if (!selectedStudentId && currentUser.role === 'parent') return;
   let url = '/api/schedules/class';
   if (currentUser.role === 'parent') url += `?studentId=${selectedStudentId}`;
-  const { days, entries, grade, section } = await API.get(url);
-  if (grade) {
-    document.querySelector('#panel-schedule h2').textContent = `${t('timetableFor')} ${grade} ${section}`;
+  const data = await API.get(url);
+  if (data.grade) {
+    document.querySelector('#panel-schedule h2').textContent = `${t('timetableFor')} ${data.grade} ${data.section}`;
   }
-  renderScheduleTable(document.getElementById('schedule-view'), days, entries);
+  renderScheduleTable(document.getElementById('schedule-view'), {
+    days: data.days,
+    lessonSlots: data.lessonSlots,
+    rows: data.rows
+  }, data.entries);
 }
 
 async function loadGrades() {

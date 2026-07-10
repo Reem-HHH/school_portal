@@ -224,19 +224,17 @@ async function closeActiveAssessment() {
   }
 }
 
-function renderScheduleTable(container, days, entries) {
-  const slots = [...new Set(entries.map(e => e.time_slot))].sort();
-  const lookup = {};
-  entries.forEach(e => { lookup[`${e.time_slot}|${e.day}`] = e.subject; });
-
-  container.innerHTML = `<table><thead><tr><th>${t('time')}</th>${days.map(d => `<th>${tDay(d)}</th>`).join('')}</tr></thead><tbody>
-    ${slots.map(time => `<tr><td>${time}</td>${days.map(d => `<td>${lookup[`${time}|${d}`] || '—'}</td>`).join('')}</tr>`).join('')}
-  </tbody></table>`;
+function renderScheduleTable(container, meta, entries) {
+  renderTimetableGrid(container, meta, entries);
 }
 
 async function loadSchedule() {
-  const { days, entries } = await API.get('/api/schedules/teacher');
-  renderScheduleTable(document.getElementById('schedule-view'), days, entries);
+  const data = await API.get('/api/schedules/teacher');
+  renderScheduleTable(document.getElementById('schedule-view'), {
+    days: data.days,
+    lessonSlots: data.lessonSlots,
+    rows: data.rows
+  }, data.entries);
 }
 
 function syncNewAssessmentFromGradebook() {

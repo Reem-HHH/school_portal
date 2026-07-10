@@ -7,6 +7,8 @@ let teacherSubjectsCache = [];
 let logsCache = [];
 let adminActiveAssessmentId = null;
 let schedulesCache = [];
+let scheduleMeta = null;
+let schoolSummaryCache = [];
 let studentMeta = { grades: [], sections: [] };
 
 function scheduleFiltersReady() {
@@ -25,40 +27,31 @@ function renderSchedules() {
     return;
   }
 
+  if (!scheduleMeta) {
+    document.getElementById('schedules-table').innerHTML = `<p class="muted">${t('loadingPreview')}</p>`;
+    return;
+  }
+
   if (!schedulesCache.length) {
     document.getElementById('schedules-table').innerHTML = `<p class="muted">${t('noScheduleEntries')}</p>`;
     return;
   }
 
-  document.getElementById('schedules-table').innerHTML = `
-    <table>
-      <thead><tr>
-        <th>${t('day')}</th>
-        <th>${t('time')}</th>
-        <th>${t('subject')}</th>
-        <th></th>
-      </tr></thead>
-      <tbody>
-        ${schedulesCache.map(e => `
-          <tr>
-            <td>${escapeHtml(e.day)}</td>
-            <td>${escapeHtml(e.time_slot)}</td>
-            <td>${escapeHtml(e.subject)}</td>
-            <td><button class="btn btn-danger btn-inline" data-del-schedule="${e.id}">${t('delete')}</button></td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
-
-  document.querySelectorAll('[data-del-schedule]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm(t('delete') + '?')) return;
-      try {
-        await API.delete(`/api/schedules/${btn.dataset.delSchedule}`);
-        showToast(t('updated'));
-        loadSchedules();
-      } catch (err) { showToast(err.message, 'error'); }
-    });
-  });
+  renderTimetableGrid(
+    document.getElementById('schedules-table'),
+    scheduleMeta,
+    schedulesCache,
+    {
+      editable: true,
+      onDelete: async (id) => {
+        try {
+          await API.delete(`/api/schedules/${id}`);
+          showToast(t('updated'));
+          loadSchedules();
+        } catch (err) { showToast(err.message, 'error'); }
+      }
+    }
+  );
 }
 
 async function loadSchedules() {
@@ -68,10 +61,11 @@ async function loadSchedules() {
     clearSchedulesTable();
     return;
   }
-  const { entries } = await API.get(
+  const data = await API.get(
     `/api/schedules/admin/class?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}`
   );
-  schedulesCache = entries;
+  scheduleMeta = { days: data.days, lessonSlots: data.lessonSlots, rows: data.rows };
+  schedulesCache = data.entries;
   renderSchedules();
 }
 
@@ -127,12 +121,22 @@ function onTopicSubTabChange(topic, subTab) {
   }
   if (topic === 'schedules' && subTab === 'directory') loadSchedules();
   if (topic === 'schedules' && subTab === 'create') syncScheduleCreateFilters();
+  if (topic === 'gradebook' && subTab === 'summary') loadSchoolSummary();
+  if (topic === 'gradebook' && subTab === 'matrix') {
+    showAdminGradebookOverview();
+    loadMasterGradebook();
+  }
 }
 
 function onTopicPanelChange(name) {
   if (name === 'gradebook') {
-    showAdminGradebookOverview();
-    loadMasterGradebook();
+    const sub = getActiveSubTab('gradebook') || 'summary';
+    if (sub === 'matrix') {
+      showAdminGradebookOverview();
+      loadMasterGradebook();
+    } else {
+      loadSchoolSummary();
+    }
   }
   if (name === 'sample') resetSampleDataPreview('panel-sample');
   if (name === 'logs') loadLogs();
@@ -143,6 +147,69 @@ function syncScheduleCreateFilters() {
   const section = document.getElementById('sched-section')?.value;
   if (grade) document.getElementById('sched-grade-create').value = grade;
   if (section) document.getElementById('sched-section-create').value = section;
+  if (scheduleMeta) populateLessonSlotSelect(document.getElementById('sched-time'), scheduleMeta);
+}
+
+function renderSchoolSummary() {
+  const gradeFilter = document.getElementById('gb-summary-grade')?.value || '';
+  let rows = schoolSummaryCache;
+  if (gradeFilter) rows = rows.filter(r => r.grade === gradeFilter);
+
+  const container = document.getElementById('admin-gradebook-summary');
+  if (!rows.length) {
+    container.innerHTML = `<p class="muted">${t('noGradebookSummary')}</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="summary-table">
+      <thead><tr>
+        <th>${t('grade')}</th>
+        <th>${t('section')}</th>
+        <th>${t('subject')}</th>
+        <th>${t('students')}</th>
+        <th>${t('assessments')}</th>
+        <th>${t('completion')}</th>
+        <th>${t('classAverage')}</th>
+        <th>${t('atRisk')}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(row => `
+          <tr>
+            <td>${escapeHtml(row.grade)}</td>
+            <td>${escapeHtml(row.section)}</td>
+            <td>${escapeHtml(row.subject)}</td>
+            <td>${row.studentCount}</td>
+            <td>${row.assessmentCount}</td>
+            <td>${row.completionPct}%</td>
+            <td>${row.classAverage != null ? `${row.classAverage}%` : '—'}</td>
+            <td>${row.atRiskCount ? `<span class="at-risk-badge">${row.atRiskCount}</span>` : '0'}</td>
+            <td><button type="button" class="btn btn-outline btn-inline" data-gb-grade="${escapeHtml(row.grade)}" data-gb-section="${escapeHtml(row.section)}" data-gb-subject="${escapeHtml(row.subject)}">${t('viewClass')}</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  container.querySelectorAll('[data-gb-grade]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('gb-grade').value = btn.dataset.gbGrade;
+      document.getElementById('gb-section').value = btn.dataset.gbSection;
+      populateGbSubjects().then(() => {
+        document.getElementById('gb-subject').value = btn.dataset.gbSubject;
+        showSubTab('gradebook', 'matrix');
+        onTopicSubTabChange('gradebook', 'matrix');
+      });
+    });
+  });
+}
+
+async function loadSchoolSummary() {
+  const gradeFilter = document.getElementById('gb-summary-grade')?.value || '';
+  let url = '/api/gradebook/school-summary';
+  if (gradeFilter) url += `?grade=${encodeURIComponent(gradeFilter)}`;
+  const { summary } = await API.get(url);
+  schoolSummaryCache = summary;
+  renderSchoolSummary();
 }
 
 function localeCompare(a, b) {
@@ -603,11 +670,16 @@ async function loadFilters() {
   const gbGradeVal = document.getElementById('gb-grade')?.value || '';
   const gbSectionVal = document.getElementById('gb-section')?.value || '';
 
+  const gbSummaryGradeVal = document.getElementById('gb-summary-grade')?.value || '';
   const { grades, sections } = await API.get('/api/students/filters');
-  ['filter-grade', 'gb-grade'].forEach(id => {
+  ['filter-grade', 'gb-grade', 'gb-summary-grade'].forEach(id => {
     const el = document.getElementById(id);
-    const saved = id === 'filter-grade' ? gradeVal : gbGradeVal;
-    el.innerHTML = `<option value="">${t('selectGrade')}</option>` + grades.map(g =>
+    if (!el) return;
+    const saved = id === 'filter-grade' ? gradeVal
+      : id === 'gb-grade' ? gbGradeVal
+        : gbSummaryGradeVal;
+    const allLabel = id === 'gb-summary-grade' ? t('allGrades') : t('selectGrade');
+    el.innerHTML = `<option value="">${allLabel}</option>` + grades.map(g =>
       `<option${g === saved ? ' selected' : ''}>${g}</option>`
     ).join('');
   });
@@ -662,8 +734,12 @@ async function init() {
     }
     if (!document.getElementById('panel-gradebook').classList.contains('section-hidden')) {
       if (adminActiveAssessmentId) adminViewMarks(adminActiveAssessmentId);
-      else if (gradebookFiltersReady()) loadMasterGradebook();
-      else clearAdminGradebook();
+      else if (isSubTabActive('gradebook', 'matrix')) {
+        if (gradebookFiltersReady()) loadMasterGradebook();
+        else clearAdminGradebook();
+      } else if (isSubTabActive('gradebook', 'summary')) {
+        renderSchoolSummary();
+      }
     }
     if (!document.getElementById('panel-logs').classList.contains('section-hidden')) renderLogs();
     if (isPanelVisible('panel-schedules') && isSubTabActive('schedules', 'directory')) {
@@ -682,6 +758,7 @@ async function init() {
   wireSubTabs('users', { defaultTab: 'create', onChange: (sub) => onTopicSubTabChange('users', sub) });
   wireSubTabs('teachers', { defaultTab: 'assign', onChange: (sub) => onTopicSubTabChange('teachers', sub) });
   wireSubTabs('students', { defaultTab: 'create', onChange: (sub) => onTopicSubTabChange('students', sub) });
+  wireSubTabs('gradebook', { defaultTab: 'summary', onChange: (sub) => onTopicSubTabChange('gradebook', sub) });
   wireSubTabs('schedules', { defaultTab: 'directory', onChange: (sub) => onTopicSubTabChange('schedules', sub) });
 
   wireSortSelect('users-sort', renderUsers);
@@ -689,6 +766,12 @@ async function init() {
   wireSortSelect('logs-sort', renderLogs);
 
   wireAutoApply(['filter-grade', 'filter-section'], loadStudents);
+  document.getElementById('gb-summary-grade')?.addEventListener('change', loadSchoolSummary);
+
+  document.getElementById('download-admin-gradebook-btn')?.addEventListener('click', () => {
+    downloadFile('/api/exports/grades', 'school-gradebook.xlsx').catch(err => showToast(err.message, 'error'));
+  });
+
   document.getElementById('gb-grade').addEventListener('change', async () => {
     await populateGbSubjects();
     showAdminGradebookOverview();
@@ -804,6 +887,8 @@ async function init() {
     document.getElementById('panel-sample')?.classList.add('section-hidden');
   }
   await loadStudentMeta();
+  scheduleMeta = await loadScheduleMeta();
+  populateLessonSlotSelect(document.getElementById('sched-time'), scheduleMeta);
   await loadFilters();
   clearStudentsTable();
   clearAdminGradebook();
