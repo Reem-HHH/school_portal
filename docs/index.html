@@ -50,7 +50,13 @@
       if (cfg.showLoginHints) {
         const el = document.getElementById('login-hints');
         el.classList.remove('section-hidden');
-        el.innerHTML = 'Admin: admin@school.com / admin123<br>Teacher: teacher@school.com / teacher123';
+        el.innerHTML = [
+          'Admin: admin@school.com / admin123',
+          'Teacher: teacher@school.com / teacher123',
+          'Teacher 2: teacher2@school.com / teacher123',
+          'Parent: parent@school.com / parent123',
+          'Student: student@school.com / student123'
+        ].join('<br>');
       }
     }).catch(() => {});
 

@@ -51,13 +51,24 @@ A sample teacher account is also seeded on first run:
 | **Email** | `teacher@school.com` |
 | **Password** | `teacher123` |
 
+When demo seeding is enabled (`SEED_DEMO_DATA=true`, the default locally), additional accounts are created:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Teacher 2 | `teacher2@school.com` | `teacher123` |
+| Parent | `parent@school.com` | `parent123` |
+| Student | `student@school.com` | `student123` |
+
+The parent and student accounts are linked to **Ahmed Al-Mansouri** in Grade 1, Section A.
+
 ### Important notes about passwords
 
-- **Local use:** The password above works out of the box.
-- **Online (Render):** Render may generate a **random** admin password. You must check the Render dashboard (see [Run online](#run-online-live-website) below) or set your own password in environment variables.
-- **Change the default password** after your first login in production by creating a new admin user and deleting the old one, or by setting `ADMIN_PASSWORD` in your environment before the first deploy.
+- **Local use:** The passwords above work out of the box when demo seeding is enabled.
+- **Online (Render):** Demo accounts are **not** seeded by default (`SEED_DEMO_DATA=false`). Set `SEED_DEMO_DATA=true` only for staging/demo environments.
+- **Online (Render):** Use `ADMIN_EMAIL` and `ADMIN_PASSWORD` from the Render dashboard (see [Run online](#run-online-live-website) below).
+- **Change the default password** after your first login in production.
 
-There is **no default teacher/parent/student account**. An admin creates those accounts in the Admin panel (Users tab).
+In production, create teacher/parent/student accounts via **Admin → Users** unless you explicitly enable demo seeding.
 
 ---
 

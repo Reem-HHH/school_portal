@@ -94,11 +94,14 @@ The app **does not** change your password on every restart anymore. To reset the
 
 When `SEED_DEMO_DATA=true` (default locally, **off on Render**), these accounts are created:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Teacher | `teacher@school.com` | `teacher123` |
-| Teacher | `teacher2@school.com` | `teacher123` |
-| Parent | `parent@school.com` | `parent123` |
+| Role | Email | Password | Notes |
+|------|-------|----------|-------|
+| Teacher | `teacher@school.com` | `teacher123` | Math, Science, PE |
+| Teacher | `teacher2@school.com` | `teacher123` | Arabic, English, Islamic Studies, Art |
+| Parent | `parent@school.com` | `parent123` | Linked to Ahmed Al-Mansouri (Grade 1A) |
+| Student | `student@school.com` | `student123` | Ahmed Al-Mansouri (Grade 1A) |
+
+Demo data includes 32 students (2 per class), full weekly timetables (7:30 start), teacher assignments for all scheduled subjects, and sample formative grades.
 
 On production Render with `SEED_DEMO_DATA=false`, these accounts are **not** seeded. Create teachers via **Admin → Users**.
 
